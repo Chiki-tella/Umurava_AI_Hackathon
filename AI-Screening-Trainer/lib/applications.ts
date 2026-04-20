@@ -11,12 +11,17 @@ export interface Application {
   experience: string
   education: string
   portfolio?: string
+  resumeFileName?: string
+  resumeFile?: File // Note: In production, this would be stored in cloud storage
   submittedAt: string
   // AI screening results (populated when recruiter runs screening)
   matchScore?: number
   strengths?: string[]
   gaps?: string[]
   recommendation?: string
+  // Notification status
+  notified?: boolean
+  selected?: boolean
 }
 
 const APPS_KEY = 'talentai_applications'
@@ -51,6 +56,8 @@ export function submitApplication(app: Omit<Application, 'id' | 'submittedAt'>):
     ...app,
     id: `app_${Date.now()}`,
     submittedAt: new Date().toISOString(),
+    notified: false,
+    selected: false,
   }
   localStorage.setItem(APPS_KEY, JSON.stringify([...applications, newApp]))
   return newApp
@@ -106,4 +113,68 @@ export function saveScreeningResults(
     return result ? { ...app, ...result } : app
   })
   localStorage.setItem(APPS_KEY, JSON.stringify(updated))
+}
+
+// Select a candidate and mark them as selected
+export function selectCandidate(applicationId: string): boolean {
+  const applications = getApplications()
+  const updated = applications.map((app) => 
+    app.id === applicationId ? { ...app, selected: true } : app
+  )
+  localStorage.setItem(APPS_KEY, JSON.stringify(updated))
+  return true
+}
+
+// Send notification to selected candidate (simulated - in production would send email)
+export function notifySelectedCandidate(applicationId: string): { success: boolean; message: string } {
+  const applications = getApplications()
+  const application = applications.find((app) => app.id === applicationId)
+  
+  if (!application) {
+    return { success: false, message: 'Application not found' }
+  }
+  
+  if (!application.selected) {
+    return { success: false, message: 'Candidate must be selected first' }
+  }
+  
+  if (application.notified) {
+    return { success: false, message: 'Candidate already notified' }
+  }
+  
+  // Update application to mark as notified
+  const updated = applications.map((app) => 
+    app.id === applicationId ? { ...app, notified: true } : app
+  )
+  localStorage.setItem(APPS_KEY, JSON.stringify(updated))
+  
+  // In production, this would send an actual email
+  console.log(`Email sent to ${application.applicantEmail}: Congratulations! You have been selected for the position.`)
+  
+  return { 
+    success: true, 
+    message: `Notification sent to ${application.applicantName} at ${application.applicantEmail}` 
+  }
+}
+
+// Get notifications for an applicant
+export function getApplicantNotifications(applicantId: string): Array<{
+  id: string
+  jobId: string
+  jobTitle?: string
+  company?: string
+  notifiedAt: string
+  message: string
+}> {
+  const applications = getApplicationsByApplicant(applicantId)
+  const notifications = applications
+    .filter(app => app.notified && app.selected)
+    .map(app => ({
+      id: app.id,
+      jobId: app.jobId,
+      notifiedAt: app.submittedAt, // In production, would have actual notification timestamp
+      message: `Congratulations! You have been selected for the position.`
+    }))
+  
+  return notifications
 }

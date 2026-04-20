@@ -45,7 +45,7 @@ const SEED_RECRUITERS: User[] = [
   { id: 'r2', email: 'recruiter@designstudio.pro', name: 'Jamie Lee',    role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'DesignStudio Pro',  jobIds: ['2'] },
   { id: 'r3', email: 'recruiter@cloudnative.io',   name: 'Sam Rivera',   role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'CloudNative Inc',   jobIds: ['3'] },
   { id: 'r4', email: 'recruiter@analytics.labs',   name: 'Taylor Kim',   role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'Analytics Labs',    jobIds: ['4'] },
-  { id: 'r5', email: 'recruiter@infra.co',          name: 'Jordan Chen',  role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'Infrastructure Co', jobIds: ['5'] },
+  { id: 'r5', email: 'recruiter@infra.co',         name: 'Jordan Chen',  role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'Infrastructure Co', jobIds: ['5'] },
   { id: 'r6', email: 'recruiter@mobilefirst.labs', name: 'Casey Park',   role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'MobileFirst Labs',  jobIds: ['6'] },
 ]
 

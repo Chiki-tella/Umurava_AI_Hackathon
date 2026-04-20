@@ -34,6 +34,9 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
     education: '',
     portfolio: '',
   })
+  
+  const [resumeFile, setResumeFile] = useState<File | null>(null)
+  const [resumeFileName, setResumeFileName] = useState('')
 
   useEffect(() => {
     if (loading) return
@@ -53,6 +56,25 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+  
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB')
+        return
+      }
+      // Check file type
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please upload a PDF, DOC, or DOCX file')
+        return
+      }
+      setResumeFile(file)
+      setResumeFileName(file.name)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -87,6 +109,8 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
       experience: formData.experience,
       education: formData.education,
       portfolio: formData.portfolio || undefined,
+      resumeFileName: resumeFileName,
+      resumeFile: resumeFile,
     })
 
     setIsSubmitting(false)
@@ -260,12 +284,31 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Resume / CV</label>
-                    <div className="border-2 border-dashed border-white/10 rounded-2xl p-10 text-center hover:border-brand-purple/40 hover:bg-brand-purple/5 transition-all duration-300 cursor-pointer group">
+                    <input
+                      type="file"
+                      id="resume-upload"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <div 
+                      onClick={() => document.getElementById('resume-upload')?.click()}
+                      className="border-2 border-dashed border-white/10 rounded-2xl p-10 text-center hover:border-brand-purple/40 hover:bg-brand-purple/5 transition-all duration-300 cursor-pointer group"
+                    >
                       <div className="w-12 h-12 rounded-2xl bg-brand-purple/10 border border-brand-purple/20 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                         <Upload className="w-6 h-6 text-brand-violet" />
                       </div>
-                      <p className="text-gray-300 font-medium mb-1">Click to upload or drag and drop</p>
-                      <p className="text-sm text-gray-500">PDF, DOC, DOCX up to 5MB</p>
+                      {resumeFileName ? (
+                        <div>
+                          <p className="text-brand-violet font-medium mb-1">{resumeFileName}</p>
+                          <p className="text-xs text-gray-500">Click to change file</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-gray-300 font-medium mb-1">Click to upload or drag and drop</p>
+                          <p className="text-sm text-gray-500">PDF, DOC, DOCX up to 5MB</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </motion.div>

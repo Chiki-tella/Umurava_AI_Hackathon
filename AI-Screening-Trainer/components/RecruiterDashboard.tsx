@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Trophy, TrendingUp, AlertCircle, Sparkles, Brain,
   Users, Target, ChevronDown, ChevronUp, Star, Zap,
-  BarChart3, CheckCircle2, XCircle, Clock, Briefcase
+  BarChart3, CheckCircle2, XCircle, Clock, Briefcase,
+  Mail, Send, UserCheck
 } from 'lucide-react'
 import { getAllJobs } from '@/lib/jobs'
-import { getApplicationsForJob, scoreApplication, saveScreeningResults, type Application } from '@/lib/applications'
+import { getApplicationsForJob, scoreApplication, saveScreeningResults, selectCandidate, notifySelectedCandidate, type Application } from '@/lib/applications'
 import { clsx } from 'clsx'
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts'
 import { useAuthContext } from '@/components/AuthProvider'
@@ -27,12 +28,14 @@ function getScoreConfig(score: number) {
   return { color: 'text-red-400', bg: 'bg-red-500', badge: 'badge-danger', label: 'Below Average' }
 }
 
-function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills }: {
+function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSelect, onNotify }: {
   app: Application
   index: number
   isExpanded: boolean
   onToggle: () => void
   requiredSkills: string[]
+  onSelect: (id: string) => void
+  onNotify: (id: string) => void
 }) {
   const score = getScoreConfig(app.matchScore ?? 0)
   const medal = MEDAL_COLORS[index]
@@ -152,6 +155,45 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills }: {
           {isExpanded ? <>Hide Details <ChevronUp className="w-4 h-4" /></> : <>View Full Profile <ChevronDown className="w-4 h-4" /></>}
         </button>
 
+        {/* Action Buttons */}
+        <div className="mt-4 flex items-center gap-3">
+          {app.selected ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <UserCheck className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm text-emerald-400 font-medium">Selected</span>
+            </div>
+          ) : (
+            <button
+              onClick={() => onSelect(app.id)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-purple/10 border border-brand-purple/20 hover:bg-brand-purple/20 text-sm text-brand-violet font-medium transition-all"
+            >
+              <UserCheck className="w-4 h-4" />
+              Select Candidate
+            </button>
+          )}
+          
+          {app.selected && !app.notified && (
+            <button
+              onClick={() => onNotify(app.id)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-sm text-emerald-400 font-medium transition-all"
+            >
+              <Send className="w-4 h-4" />
+              Send Notification
+            </button>
+          )}
+          
+          {app.notified && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <Mail className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm text-emerald-400 font-medium">Notified</span>
+            </div>
+          )}
+          
+          <button onClick={onToggle} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-sm text-gray-400 hover:text-white transition-all">
+            {isExpanded ? <>Hide Details <ChevronUp className="w-4 h-4" /></> : <>View Full Profile <ChevronDown className="w-4 h-4" /></>}
+          </button>
+        </div>
+
         <AnimatePresence>
           {isExpanded && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
@@ -184,6 +226,12 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills }: {
                     <div>
                       <p className="text-xs font-medium text-gray-400 mb-1">Portfolio</p>
                       <a href={app.portfolio} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-violet hover:underline">{app.portfolio}</a>
+                    </div>
+                  )}
+                  {app.resumeFileName && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-400 mb-1">Resume/CV</p>
+                      <p className="text-sm text-gray-300">{app.resumeFileName}</p>
                     </div>
                   )}
                   <p className="text-xs text-gray-600">Applied {new Date(app.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
@@ -281,6 +329,27 @@ export function RecruiterDashboard() {
     await new Promise((r) => setTimeout(r, 300))
     setIsScreening(false)
     setShowResults(true)
+  }
+
+  const handleSelectCandidate = (applicationId: string) => {
+    selectCandidate(applicationId)
+    // Reload applications to update UI
+    const updated = getApplicationsForJob(selectedJobId)
+      .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
+    setApplications(updated)
+  }
+
+  const handleNotifyCandidate = (applicationId: string) => {
+    const result = notifySelectedCandidate(applicationId)
+    if (result.success) {
+      alert(result.message)
+      // Reload applications to update UI
+      const updated = getApplicationsForJob(selectedJobId)
+        .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
+      setApplications(updated)
+    } else {
+      alert(result.message)
+    }
   }
 
   if (authLoading || !user) {
@@ -446,6 +515,8 @@ export function RecruiterDashboard() {
                       isExpanded={expandedId === app.id}
                       onToggle={() => setExpandedId(expandedId === app.id ? null : app.id)}
                       requiredSkills={selectedJob?.requiredSkills ?? []}
+                      onSelect={handleSelectCandidate}
+                      onNotify={handleNotifyCandidate}
                     />
                   ))}
                 </div>

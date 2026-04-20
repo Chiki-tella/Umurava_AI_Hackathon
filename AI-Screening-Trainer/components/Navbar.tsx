@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Briefcase, LayoutDashboard, Zap, LogOut, User, ChevronDown, ShieldCheck } from 'lucide-react'
+import { Briefcase, LayoutDashboard, Zap, LogOut, User, ChevronDown, ShieldCheck, Bell } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAuthContext } from '@/components/AuthProvider'
 import { useState, useRef, useEffect } from 'react'
@@ -56,18 +56,32 @@ export function Navbar() {
             <div className="hidden md:flex items-center gap-1 bg-dark-800/50 backdrop-blur-sm border border-white/5 rounded-2xl p-1">
               {/* Applicants see Jobs */}
               {user.role === 'applicant' && (
-                <Link
-                  href="/jobs"
-                  className={clsx(
-                    'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
-                    isActive('/jobs')
-                      ? 'bg-brand-purple/20 text-brand-violet border border-brand-purple/30'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  )}
-                >
-                  <Briefcase className="w-4 h-4" />
-                  <span>Browse Jobs</span>
-                </Link>
+                <>
+                  <Link
+                    href="/jobs"
+                    className={clsx(
+                      'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
+                      isActive('/jobs')
+                        ? 'bg-brand-purple/20 text-brand-violet border border-brand-purple/30'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    )}
+                  >
+                    <Briefcase className="w-4 h-4" />
+                    <span>Browse Jobs</span>
+                  </Link>
+                  <Link
+                    href="/notifications"
+                    className={clsx(
+                      'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
+                      isActive('/notifications')
+                        ? 'bg-brand-purple/20 text-brand-violet border border-brand-purple/30'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    )}
+                  >
+                    <Bell className="w-4 h-4" />
+                    <span>Notifications</span>
+                  </Link>
+                </>
               )}
 
               {/* Recruiters see Dashboard */}
@@ -132,6 +146,16 @@ export function Navbar() {
                       <p className="text-sm font-medium text-white">{user.name}</p>
                       <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
+                    {user.role === 'applicant' && (
+                      <Link
+                        href="/notifications"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                      >
+                        <Bell className="w-4 h-4" />
+                        Notifications
+                      </Link>
+                    )}
                     <Link
                       href="/profile"
                       onClick={() => setMenuOpen(false)}
