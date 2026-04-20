@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Bell, CheckCircle2, Mail, Briefcase, Calendar, ArrowRight, Users, Send, AlertCircle } from 'lucide-react'
 import { useAuthContext } from '@/components/AuthProvider'
 import { getApplicantNotifications, getApplicationsForJob } from '@/lib/applications'
-import { getJobs } from '@/lib/jobs'
+import { getAllJobs } from '@/lib/jobs'
 import { clsx } from 'clsx'
 import Link from 'next/link'
 
@@ -18,7 +18,7 @@ export function NotificationsPage() {
   useEffect(() => {
     if (loading || !user) return
     
-    const allJobs = getJobs()
+    const allJobs = getAllJobs()
     
     if (user.role === 'applicant') {
       // Applicant notifications
