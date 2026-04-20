@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Zap, Mail, User, Building2, Briefcase, MapPin, Code,
-  ArrowRight, Sparkles, ChevronRight, Plus, X
+  ArrowRight, Sparkles, ChevronRight, Plus, X, Eye, EyeOff
 } from 'lucide-react'
 import { signIn, signUp, type UserRole } from '@/lib/auth'
 import { useAuthContext } from '@/components/AuthProvider'
@@ -34,16 +34,22 @@ export function AuthPage() {
   useEffect(() => {
     if (authLoading) return
     if (currentUser) {
-      router.replace(currentUser.role === 'recruiter' ? '/dashboard' : '/jobs')
+      if (currentUser.role === 'admin') router.replace('/admin')
+      else router.replace(currentUser.role === 'recruiter' ? '/dashboard' : '/jobs')
     }
   }, [currentUser, authLoading, router])
 
   // Sign in
   const [siEmail, setSiEmail] = useState('')
+  const [siPassword, setSiPassword] = useState('')
+  const [siShowPw, setSiShowPw] = useState(false)
 
   // Sign up shared
   const [suEmail, setSuEmail] = useState('')
   const [suName, setSuName] = useState('')
+  const [suPassword, setSuPassword] = useState('')
+  const [suConfirm, setSuConfirm] = useState('')
+  const [suShowPw, setSuShowPw] = useState(false)
   const [suRole, setSuRole] = useState<UserRole>('applicant')
 
   // Applicant extras
@@ -62,17 +68,19 @@ export function AuthPage() {
   const [jobSalary, setJobSalary] = useState('')
   const [jobLocation, setJobLocation] = useState('')
   const [jobType, setJobType] = useState('Full-time')
+  const [jobWebsite, setJobWebsite] = useState('')
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     await new Promise((r) => setTimeout(r, 600))
-    const result = signIn(siEmail)
+    const result = signIn(siEmail, siPassword)
     setLoading(false)
     if ('error' in result) { setError(result.error); return }
     refresh()
-    router.push(result.user.role === 'recruiter' ? '/dashboard' : '/jobs')
+    if (result.user.role === 'admin') router.push('/admin')
+    else router.push(result.user.role === 'recruiter' ? '/dashboard' : '/jobs')
   }
 
   // Applicant signup
@@ -123,6 +131,7 @@ export function AuthPage() {
       salary: jobSalary || undefined,
       location: jobLocation || undefined,
       type: jobType || undefined,
+      websiteUrl: jobWebsite || undefined,
       recruiterId: newRecruiterUser.id,
     })
     setLoading(false)
@@ -195,6 +204,8 @@ export function AuthPage() {
                   {['recruiter@techflow.ai', 'recruiter@designstudio.pro'].map((e) => (
                     <button key={e} onClick={() => setSiEmail(e)} className="block text-xs text-brand-violet hover:underline">{e}</button>
                   ))}
+                  <p className="text-xs text-gray-500 mt-2 mb-1 font-medium">Admin account:</p>
+                  <button onClick={() => setSiEmail('admin@talentai.com')} className="block text-xs text-brand-orange hover:underline">admin@talentai.com</button>
                 </div>
               </div>
             </motion.div>
@@ -419,6 +430,10 @@ export function AuthPage() {
                       <label className="block text-xs font-medium text-gray-400 mb-1.5">Salary Range</label>
                       <input type="text" value={jobSalary} onChange={(e) => setJobSalary(e.target.value)} placeholder="$80k - $120k" className="input-field" />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Company Website</label>
+                    <input type="url" value={jobWebsite} onChange={(e) => setJobWebsite(e.target.value)} placeholder="https://yourcompany.com" className="input-field" />
                   </div>
 
                   {error && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2">{error}</p>}

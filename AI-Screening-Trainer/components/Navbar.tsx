@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Briefcase, LayoutDashboard, Zap, LogOut, User, ChevronDown } from 'lucide-react'
+import { Briefcase, LayoutDashboard, Zap, LogOut, User, ChevronDown, ShieldCheck } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAuthContext } from '@/components/AuthProvider'
 import { useState, useRef, useEffect } from 'react'
@@ -30,7 +30,7 @@ export function Navbar() {
     return false
   }
 
-  const homeHref = !user ? '/' : user.role === 'recruiter' ? '/dashboard' : '/jobs'
+  const homeHref = !user ? '/' : user.role === 'admin' ? '/admin' : user.role === 'recruiter' ? '/dashboard' : '/jobs'
 
   const handleSignOut = () => {
     signOut()
@@ -85,6 +85,22 @@ export function Navbar() {
                   <span>My Dashboard</span>
                 </Link>
               )}
+
+              {/* Admin sees Admin panel */}
+              {user.role === 'admin' && (
+                <Link
+                  href="/admin"
+                  className={clsx(
+                    'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
+                    isActive('/admin')
+                      ? 'bg-brand-orange/20 text-brand-orange border border-brand-orange/30'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  )}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Admin Panel</span>
+                </Link>
+              )}
             </div>
           )}
 
@@ -106,8 +122,7 @@ export function Navbar() {
                   </div>
                   <div className="hidden sm:block text-left">
                     <p className="text-sm font-medium text-white leading-none">{user.name.split(' ')[0]}</p>
-                    <p className="text-xs text-gray-500 capitalize">{user.role}</p>
-                  </div>
+                    <p className="text-xs text-gray-500 capitalize">{user.role}</p>                  </div>
                   <ChevronDown className={clsx('w-4 h-4 text-gray-400 transition-transform', menuOpen && 'rotate-180')} />
                 </button>
 

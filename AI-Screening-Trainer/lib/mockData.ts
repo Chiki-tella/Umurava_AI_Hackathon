@@ -12,6 +12,7 @@ export interface Job {
   location?: string
   type?: string
   applicants?: number
+  websiteUrl?: string
 }
 
 export interface Candidate {
@@ -45,6 +46,7 @@ export const jobs: Job[] = [
     location: 'San Francisco, CA (Hybrid)',
     type: 'Full-time',
     applicants: 47,
+    websiteUrl: 'https://techflow.ai',
   },
   {
     id: '2',
@@ -60,6 +62,7 @@ export const jobs: Job[] = [
     location: 'Remote',
     type: 'Full-time',
     applicants: 83,
+    websiteUrl: 'https://designstudio.pro',
   },
   {
     id: '3',
@@ -75,6 +78,7 @@ export const jobs: Job[] = [
     location: 'New York, NY (On-site)',
     type: 'Full-time',
     applicants: 62,
+    websiteUrl: 'https://cloudnative.io',
   },
   {
     id: '4',
@@ -90,6 +94,7 @@ export const jobs: Job[] = [
     location: 'Austin, TX (Hybrid)',
     type: 'Full-time',
     applicants: 38,
+    websiteUrl: 'https://analytics.labs',
   },
   {
     id: '5',
@@ -105,6 +110,7 @@ export const jobs: Job[] = [
     location: 'Seattle, WA (Remote)',
     type: 'Full-time',
     applicants: 29,
+    websiteUrl: 'https://infrastructure.co',
   },
   {
     id: '6',
@@ -120,6 +126,7 @@ export const jobs: Job[] = [
     location: 'Los Angeles, CA (Hybrid)',
     type: 'Full-time',
     applicants: 55,
+    websiteUrl: 'https://mobilefirst.labs',
   },
 ]
 

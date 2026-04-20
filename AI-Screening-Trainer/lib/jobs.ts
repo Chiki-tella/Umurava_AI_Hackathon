@@ -30,6 +30,7 @@ export function addJob(data: {
   salary?: string
   location?: string
   type?: string
+  websiteUrl?: string
   recruiterId: string
 }): Job {
   const stored = getStoredJobs()
@@ -47,6 +48,7 @@ export function addJob(data: {
     salary: data.salary,
     location: data.location,
     type: data.type,
+    websiteUrl: data.websiteUrl,
     applicants: 0,
   }
   localStorage.setItem(JOBS_KEY, JSON.stringify([...stored, job]))

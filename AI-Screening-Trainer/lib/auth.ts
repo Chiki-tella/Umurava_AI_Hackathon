@@ -1,75 +1,52 @@
 // Simple client-side auth store (demo/hackathon — no backend)
 // In production this would be replaced with NextAuth / Supabase / etc.
 
-export type UserRole = 'applicant' | 'recruiter'
+export type UserRole = 'applicant' | 'recruiter' | 'admin'
 
 export interface User {
   id: string
   email: string
   name: string
   role: UserRole
+  passwordHash: string
   // Applicant-specific
   preferredRoles?: string[]
   preferredLocations?: string[]
   skills?: string[]
   // Recruiter-specific
   company?: string
-  jobIds?: string[] // jobs this recruiter owns
+  jobIds?: string[]
 }
 
 const STORAGE_KEY = 'talentai_user'
 const USERS_KEY = 'talentai_users'
 
-// Seed recruiter accounts that map to existing mock jobs
+/** Simple deterministic hash — good enough for a localStorage demo */
+export function hashPassword(password: string): string {
+  let hash = 0
+  for (let i = 0; i < password.length; i++) {
+    hash = (Math.imul(31, hash) + password.charCodeAt(i)) | 0
+  }
+  return hash.toString(16)
+}
+
+// Seed admin account — password: admin123
+const SEED_ADMIN: User = {
+  id: 'admin_1',
+  email: 'admin@talentai.com',
+  name: 'Platform Admin',
+  role: 'admin',
+  passwordHash: hashPassword('admin123'),
+}
+
+// Seed recruiter accounts — password: recruiter123
 const SEED_RECRUITERS: User[] = [
-  {
-    id: 'r1',
-    email: 'recruiter@techflow.ai',
-    name: 'Alex Morgan',
-    role: 'recruiter',
-    company: 'TechFlow AI',
-    jobIds: ['1'],
-  },
-  {
-    id: 'r2',
-    email: 'recruiter@designstudio.pro',
-    name: 'Jamie Lee',
-    role: 'recruiter',
-    company: 'DesignStudio Pro',
-    jobIds: ['2'],
-  },
-  {
-    id: 'r3',
-    email: 'recruiter@cloudnative.io',
-    name: 'Sam Rivera',
-    role: 'recruiter',
-    company: 'CloudNative Inc',
-    jobIds: ['3'],
-  },
-  {
-    id: 'r4',
-    email: 'recruiter@analytics.labs',
-    name: 'Taylor Kim',
-    role: 'recruiter',
-    company: 'Analytics Labs',
-    jobIds: ['4'],
-  },
-  {
-    id: 'r5',
-    email: 'recruiter@infra.co',
-    name: 'Jordan Chen',
-    role: 'recruiter',
-    company: 'Infrastructure Co',
-    jobIds: ['5'],
-  },
-  {
-    id: 'r6',
-    email: 'recruiter@mobilefirst.labs',
-    name: 'Casey Park',
-    role: 'recruiter',
-    company: 'MobileFirst Labs',
-    jobIds: ['6'],
-  },
+  { id: 'r1', email: 'recruiter@techflow.ai',      name: 'Alex Morgan',  role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'TechFlow AI',       jobIds: ['1'] },
+  { id: 'r2', email: 'recruiter@designstudio.pro', name: 'Jamie Lee',    role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'DesignStudio Pro',  jobIds: ['2'] },
+  { id: 'r3', email: 'recruiter@cloudnative.io',   name: 'Sam Rivera',   role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'CloudNative Inc',   jobIds: ['3'] },
+  { id: 'r4', email: 'recruiter@analytics.labs',   name: 'Taylor Kim',   role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'Analytics Labs',    jobIds: ['4'] },
+  { id: 'r5', email: 'recruiter@infra.co',          name: 'Jordan Chen',  role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'Infrastructure Co', jobIds: ['5'] },
+  { id: 'r6', email: 'recruiter@mobilefirst.labs', name: 'Casey Park',   role: 'recruiter', passwordHash: hashPassword('recruiter123'), company: 'MobileFirst Labs',  jobIds: ['6'] },
 ]
 
 function getStoredUsers(): User[] {
@@ -77,16 +54,21 @@ function getStoredUsers(): User[] {
   try {
     const raw = localStorage.getItem(USERS_KEY)
     const stored: User[] = raw ? JSON.parse(raw) : []
-    // Merge seed recruiters (don't duplicate)
     const ids = new Set(stored.map((u) => u.id))
     const merged = [...stored]
     for (const r of SEED_RECRUITERS) {
       if (!ids.has(r.id)) merged.push(r)
     }
+    if (!ids.has(SEED_ADMIN.id)) merged.push(SEED_ADMIN)
     return merged
   } catch {
-    return SEED_RECRUITERS
+    return [...SEED_RECRUITERS, SEED_ADMIN]
   }
+}
+
+/** Public getter for admin to read all users */
+export function getAllUsers(): User[] {
+  return getStoredUsers()
 }
 
 function saveUsers(users: User[]) {
@@ -116,6 +98,7 @@ export function setCurrentUser(user: User | null) {
 export function signUp(data: {
   email: string
   name: string
+  password: string
   role: UserRole
   company?: string
   preferredRoles?: string[]
@@ -131,6 +114,7 @@ export function signUp(data: {
     email: data.email,
     name: data.name,
     role: data.role,
+    passwordHash: hashPassword(data.password),
     company: data.company,
     preferredRoles: data.preferredRoles,
     preferredLocations: data.preferredLocations,
@@ -142,10 +126,11 @@ export function signUp(data: {
   return { user }
 }
 
-export function signIn(email: string): { user: User } | { error: string } {
+export function signIn(email: string, password: string): { user: User } | { error: string } {
   const users = getStoredUsers()
   const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase())
   if (!user) return { error: 'No account found with this email.' }
+  if (user.passwordHash !== hashPassword(password)) return { error: 'Incorrect password.' }
   setCurrentUser(user)
   return { user }
 }
