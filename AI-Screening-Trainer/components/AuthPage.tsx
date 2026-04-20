@@ -1,15 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Zap, Mail, User, Building2, Briefcase, MapPin, Code,
-  ArrowRight, Eye, EyeOff, Sparkles, ChevronRight
+  ArrowRight, Sparkles, ChevronRight, Plus, X
 } from 'lucide-react'
 import { signIn, signUp, type UserRole } from '@/lib/auth'
 import { useAuthContext } from '@/components/AuthProvider'
 import { clsx } from 'clsx'
+import { addJob } from '@/lib/jobs'
 
 const ROLE_OPTIONS = [
   'Frontend Engineer', 'Backend Engineer', 'Full Stack Developer',
@@ -19,14 +20,23 @@ const ROLE_OPTIONS = [
 
 const LOCATION_OPTIONS = ['Remote', 'San Francisco', 'New York', 'Austin', 'Seattle', 'Los Angeles']
 
-type Mode = 'signin' | 'signup-role' | 'signup-applicant' | 'signup-recruiter'
+type Mode = 'signin' | 'signup-role' | 'signup-applicant' | 'signup-recruiter' | 'post-job'
 
 export function AuthPage() {
   const router = useRouter()
-  const { refresh } = useAuthContext()
+  const { user: currentUser, loading: authLoading, refresh } = useAuthContext()
   const [mode, setMode] = useState<Mode>('signin')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [newRecruiterUser, setNewRecruiterUser] = useState<import('@/lib/auth').User | null>(null)
+
+  // Redirect already-logged-in users immediately
+  useEffect(() => {
+    if (authLoading) return
+    if (currentUser) {
+      router.replace(currentUser.role === 'recruiter' ? '/dashboard' : '/jobs')
+    }
+  }, [currentUser, authLoading, router])
 
   // Sign in
   const [siEmail, setSiEmail] = useState('')
@@ -44,6 +54,15 @@ export function AuthPage() {
   // Recruiter extras
   const [company, setCompany] = useState('')
 
+  // Post-job form
+  const [jobTitle, setJobTitle] = useState('')
+  const [jobDescription, setJobDescription] = useState('')
+  const [jobSkills, setJobSkills] = useState('')
+  const [jobExpLevel, setJobExpLevel] = useState('')
+  const [jobSalary, setJobSalary] = useState('')
+  const [jobLocation, setJobLocation] = useState('')
+  const [jobType, setJobType] = useState('Full-time')
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -56,6 +75,7 @@ export function AuthPage() {
     router.push(result.user.role === 'recruiter' ? '/dashboard' : '/jobs')
   }
 
+  // Applicant signup
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -64,16 +84,49 @@ export function AuthPage() {
     const result = signUp({
       email: suEmail,
       name: suName,
-      role: suRole,
-      company: suRole === 'recruiter' ? company : undefined,
-      preferredRoles: suRole === 'applicant' ? prefRoles : undefined,
-      preferredLocations: suRole === 'applicant' ? prefLocations : undefined,
-      skills: suRole === 'applicant' ? skills.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
+      role: 'applicant',
+      preferredRoles: prefRoles,
+      preferredLocations: prefLocations,
+      skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
     })
     setLoading(false)
     if ('error' in result) { setError(result.error); return }
     refresh()
-    router.push(result.user.role === 'recruiter' ? '/dashboard' : '/jobs')
+    router.push('/jobs')
+  }
+
+  // Recruiter signup → then post a job
+  const handleRecruiterSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    await new Promise((r) => setTimeout(r, 800))
+    const result = signUp({ email: suEmail, name: suName, role: 'recruiter', company })
+    setLoading(false)
+    if ('error' in result) { setError(result.error); return }
+    refresh()
+    setNewRecruiterUser(result.user)
+    setMode('post-job')
+  }
+
+  const handlePostJob = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newRecruiterUser) return
+    setLoading(true)
+    await new Promise((r) => setTimeout(r, 600))
+    addJob({
+      title: jobTitle,
+      company: newRecruiterUser.company || company,
+      description: jobDescription,
+      requiredSkills: jobSkills.split(',').map((s) => s.trim()).filter(Boolean),
+      experienceLevel: jobExpLevel,
+      salary: jobSalary || undefined,
+      location: jobLocation || undefined,
+      type: jobType || undefined,
+      recruiterId: newRecruiterUser.id,
+    })
+    setLoading(false)
+    router.push('/dashboard')
   }
 
   const togglePref = (arr: string[], val: string, set: (v: string[]) => void) => {
@@ -282,7 +335,7 @@ export function AuthPage() {
                 </div>
                 <p className="text-gray-400 text-sm mb-6">Set up your hiring account</p>
 
-                <form onSubmit={handleSignUp} className="space-y-4">
+                <form onSubmit={handleRecruiterSignUp} className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-400 mb-1.5">Full Name *</label>
                     <input type="text" required value={suName} onChange={(e) => setSuName(e.target.value)} placeholder="Alex Morgan" className="input-field" />
@@ -313,6 +366,75 @@ export function AuthPage() {
                 <button onClick={() => { setMode('signup-role'); setError('') }} className="w-full text-center text-sm text-gray-500 hover:text-gray-300 transition-colors mt-4">
                   ← Back
                 </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── POST A JOB (after recruiter signup) ── */}
+          {mode === 'post-job' && (
+            <motion.div key="post-job" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
+              <div className="glass-card p-8">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 rounded-lg bg-brand-purple/20 flex items-center justify-center">
+                    <Plus className="w-3.5 h-3.5 text-brand-violet" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white">Post Your First Job</h2>
+                </div>
+                <p className="text-gray-400 text-sm mb-6">Add a job so applicants can find and apply to it</p>
+
+                <form onSubmit={handlePostJob} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Job Title *</label>
+                    <input type="text" required value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="Senior Frontend Engineer" className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Description *</label>
+                    <textarea required rows={3} value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} placeholder="Describe the role, responsibilities, and what you're looking for..." className="input-field resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Required Skills * <span className="text-gray-600 font-normal">(comma-separated)</span></label>
+                    <input type="text" required value={jobSkills} onChange={(e) => setJobSkills(e.target.value)} placeholder="React, TypeScript, Node.js" className="input-field" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Experience Level *</label>
+                      <input type="text" required value={jobExpLevel} onChange={(e) => setJobExpLevel(e.target.value)} placeholder="3+ years" className="input-field" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Job Type</label>
+                      <select value={jobType} onChange={(e) => setJobType(e.target.value)} className="input-field" style={{ background: '#141428' }}>
+                        <option>Full-time</option>
+                        <option>Part-time</option>
+                        <option>Contract</option>
+                        <option>Internship</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Location</label>
+                      <input type="text" value={jobLocation} onChange={(e) => setJobLocation(e.target.value)} placeholder="Remote / New York" className="input-field" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1.5">Salary Range</label>
+                      <input type="text" value={jobSalary} onChange={(e) => setJobSalary(e.target.value)} placeholder="$80k - $120k" className="input-field" />
+                    </div>
+                  </div>
+
+                  {error && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2">{error}</p>}
+
+                  <div className="flex gap-3 pt-1">
+                    <button type="button" onClick={() => router.push('/dashboard')} className="btn-secondary flex-1 flex items-center justify-center gap-2 py-3 text-sm">
+                      <X className="w-4 h-4" /> Skip for now
+                    </button>
+                    <button type="submit" disabled={loading} className="btn-primary flex-1 flex items-center justify-center gap-2 py-3 disabled:opacity-70">
+                      {loading
+                        ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        : <><Plus className="w-4 h-4" /> Post Job</>
+                      }
+                    </button>
+                  </div>
+                </form>
               </div>
             </motion.div>
           )}

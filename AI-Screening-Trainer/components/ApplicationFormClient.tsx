@@ -162,7 +162,7 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
         </div>
 
         <div className="glass-card p-8">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={(e) => { e.preventDefault(); if (step === steps.length - 1) handleSubmit(e) }}>
             <AnimatePresence mode="wait">
               {step === 0 && (
                 <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-6">
@@ -261,7 +261,7 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
                 <ArrowLeft className="w-4 h-4" />Back
               </button>
 
-              {step < steps.length - 1 ? (
+            {step < steps.length - 1 ? (
                 <button type="button" onClick={() => setStep((s) => s + 1)} className="btn-primary flex items-center gap-2 px-6 py-2.5 text-sm">
                   Continue <ChevronRight className="w-4 h-4" />
                 </button>

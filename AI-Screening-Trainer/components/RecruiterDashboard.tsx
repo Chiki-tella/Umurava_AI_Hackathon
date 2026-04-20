@@ -7,7 +7,7 @@ import {
   Users, Target, ChevronDown, ChevronUp, Star, Zap,
   BarChart3, CheckCircle2, XCircle, Clock, Briefcase
 } from 'lucide-react'
-import { jobs } from '@/lib/mockData'
+import { getAllJobs } from '@/lib/jobs'
 import { getApplicationsForJob, scoreApplication, saveScreeningResults, type Application } from '@/lib/applications'
 import { clsx } from 'clsx'
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts'
@@ -221,15 +221,18 @@ export function RecruiterDashboard() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [screeningProgress, setScreeningProgress] = useState(0)
 
+  const [allJobs, setAllJobs] = useState(() => getAllJobs())
+
   // Auth guard
   useEffect(() => {
     if (authLoading) return
     if (!user) { router.replace('/auth'); return }
     if (user.role !== 'recruiter') { router.replace('/'); return }
+    setAllJobs(getAllJobs())
   }, [user, authLoading, router])
 
   // Recruiter's jobs — only jobs they own
-  const myJobs = jobs.filter((j) => user?.jobIds?.includes(j.id))
+  const myJobs = allJobs.filter((j) => user?.jobIds?.includes(j.id))
 
   useEffect(() => {
     if (myJobs.length > 0 && !selectedJobId) {
@@ -244,7 +247,7 @@ export function RecruiterDashboard() {
     }
   }, [selectedJobId])
 
-  const selectedJob = jobs.find((j) => j.id === selectedJobId)
+  const selectedJob = allJobs.find((j) => j.id === selectedJobId)
 
   const handleScreening = async () => {
     if (!selectedJob) return

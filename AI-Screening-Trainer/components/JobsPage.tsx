@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { jobs } from '@/lib/mockData'
+import { getAllJobs } from '@/lib/jobs'
 import { JobCard } from '@/components/JobCard'
 import { useAuthContext } from '@/components/AuthProvider'
 import { Sparkles, Briefcase, Filter } from 'lucide-react'
@@ -12,10 +12,13 @@ export function JobsPage() {
   const { user, loading } = useAuthContext()
   const router = useRouter()
 
+  const [allJobs, setAllJobs] = useState(() => getAllJobs())
+
   useEffect(() => {
     if (loading) return
     if (!user) { router.replace('/auth'); return }
     if (user.role === 'recruiter') { router.replace('/dashboard'); return }
+    setAllJobs(getAllJobs())
   }, [user, loading, router])
 
   if (loading || !user) {
@@ -26,8 +29,8 @@ export function JobsPage() {
     )
   }
 
-  const openJobs = jobs.filter((j) => j.status === 'open')
-  const closedJobs = jobs.filter((j) => j.status === 'closed')
+  const openJobs = allJobs.filter((j) => j.status === 'open')
+  const closedJobs = allJobs.filter((j) => j.status === 'closed')
 
   const hasPrefs =
     (user.preferredRoles && user.preferredRoles.length > 0) ||
