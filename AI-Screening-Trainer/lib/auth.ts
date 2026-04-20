@@ -52,14 +52,32 @@ const SEED_RECRUITERS: User[] = [
 function getStoredUsers(): User[] {
   if (typeof window === 'undefined') return []
   try {
+    // One-time reset: clear corrupted data
+    if (localStorage.getItem('talentai_reset') !== 'done') {
+      localStorage.removeItem(USERS_KEY)
+      localStorage.setItem('talentai_reset', 'done')
+    }
+    
     const raw = localStorage.getItem(USERS_KEY)
     const stored: User[] = raw ? JSON.parse(raw) : []
     const ids = new Set(stored.map((u) => u.id))
     const merged = [...stored]
-    for (const r of SEED_RECRUITERS) {
-      if (!ids.has(r.id)) merged.push(r)
+    
+    // Always ensure seed users have correct password hashes
+    const allSeedUsers = [SEED_ADMIN, ...SEED_RECRUITERS]
+    for (const seedUser of allSeedUsers) {
+      const existingIndex = merged.findIndex(u => u.id === seedUser.id)
+      if (existingIndex === -1) {
+        // Add seed user if not exists
+        merged.push(seedUser)
+      } else {
+        // Update existing user to ensure passwordHash is set
+        merged[existingIndex] = { ...seedUser, ...merged[existingIndex], passwordHash: seedUser.passwordHash }
+      }
     }
-    if (!ids.has(SEED_ADMIN.id)) merged.push(SEED_ADMIN)
+    
+    // Save back to localStorage to ensure persistence
+    saveUsers(merged)
     return merged
   } catch {
     return [...SEED_RECRUITERS, SEED_ADMIN]
@@ -130,6 +148,10 @@ export function signIn(email: string, password: string): { user: User } | { erro
   const users = getStoredUsers()
   const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase())
   if (!user) return { error: 'No account found with this email.' }
+  
+  // Debug logging (remove in production)
+  console.log('Login attempt:', { email, password, storedHash: user.passwordHash, inputHash: hashPassword(password) })
+  
   if (user.passwordHash !== hashPassword(password)) return { error: 'Incorrect password.' }
   setCurrentUser(user)
   return { user }

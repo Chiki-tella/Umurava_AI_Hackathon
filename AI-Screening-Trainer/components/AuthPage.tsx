@@ -93,6 +93,7 @@ export function AuthPage() {
       email: suEmail,
       name: suName,
       role: 'applicant',
+      password: suPassword,
       preferredRoles: prefRoles,
       preferredLocations: prefLocations,
       skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
@@ -109,7 +110,7 @@ export function AuthPage() {
     setError('')
     setLoading(true)
     await new Promise((r) => setTimeout(r, 800))
-    const result = signUp({ email: suEmail, name: suName, role: 'recruiter', company })
+    const result = signUp({ email: suEmail, name: suName, role: 'recruiter', company, password: suPassword })
     setLoading(false)
     if ('error' in result) { setError(result.error); return }
     refresh()
@@ -166,7 +167,7 @@ export function AuthPage() {
             <motion.div key="signin" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
               <div className="glass-card p-8">
                 <h2 className="text-2xl font-bold text-white mb-1">Welcome back</h2>
-                <p className="text-gray-400 text-sm mb-6">Enter your email to sign in</p>
+                <p className="text-gray-400 text-sm mb-6">Enter your email and password to sign in</p>
 
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div>
@@ -179,6 +180,19 @@ export function AuthPage() {
                         placeholder="you@example.com"
                         className="input-field pl-10"
                       />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                    <div className="relative">
+                      <EyeOff className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <input
+                        type={siShowPw ? 'text' : 'password'} required value={siPassword}
+                        onChange={(e) => setSiPassword(e.target.value)}
+                        placeholder="Password"
+                        className="input-field pl-10"
+                      />
+                      <button type="button" onClick={() => setSiShowPw(!siShowPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-medium">{siShowPw ? 'Hide' : 'Show'}</button>
                     </div>
                   </div>
 
@@ -196,16 +210,6 @@ export function AuthPage() {
                       Sign up
                     </button>
                   </p>
-                </div>
-
-                {/* Demo hint */}
-                <div className="mt-4 p-3 rounded-xl bg-brand-purple/5 border border-brand-purple/20">
-                  <p className="text-xs text-gray-500 mb-1 font-medium">Demo recruiter accounts:</p>
-                  {['recruiter@techflow.ai', 'recruiter@designstudio.pro'].map((e) => (
-                    <button key={e} onClick={() => setSiEmail(e)} className="block text-xs text-brand-violet hover:underline">{e}</button>
-                  ))}
-                  <p className="text-xs text-gray-500 mt-2 mb-1 font-medium">Admin account:</p>
-                  <button onClick={() => setSiEmail('admin@talentai.com')} className="block text-xs text-brand-orange hover:underline">admin@talentai.com</button>
                 </div>
               </div>
             </motion.div>
@@ -268,6 +272,20 @@ export function AuthPage() {
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1.5">Email *</label>
                       <input type="email" required value={suEmail} onChange={(e) => setSuEmail(e.target.value)} placeholder="jane@email.com" className="input-field text-sm py-2.5" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Password *</label>
+                    <div className="relative">
+                      <EyeOff className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <input
+                        type={suShowPw ? 'text' : 'password'} required value={suPassword}
+                        onChange={(e) => setSuPassword(e.target.value)}
+                        placeholder="Password"
+                        className="input-field pl-10"
+                      />
+                      <button type="button" onClick={() => setSuShowPw(!suShowPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-medium">{suShowPw ? 'Hide' : 'Show'}</button>
                     </div>
                   </div>
 
@@ -354,6 +372,19 @@ export function AuthPage() {
                   <div>
                     <label className="block text-xs font-medium text-gray-400 mb-1.5">Work Email *</label>
                     <input type="email" required value={suEmail} onChange={(e) => setSuEmail(e.target.value)} placeholder="alex@company.com" className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Password *</label>
+                    <div className="relative">
+                      <EyeOff className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <input
+                        type={suShowPw ? 'text' : 'password'} required value={suPassword}
+                        onChange={(e) => setSuPassword(e.target.value)}
+                        placeholder="Password"
+                        className="input-field pl-10"
+                      />
+                      <button type="button" onClick={() => setSuShowPw(!suShowPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-medium">{suShowPw ? 'Hide' : 'Show'}</button>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-400 mb-1.5">Company Name *</label>
