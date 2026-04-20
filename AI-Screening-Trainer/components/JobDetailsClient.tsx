@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
-  ArrowLeft, MapPin, DollarSign, Clock, Users, Briefcase,
-  Star, Award, CheckCircle2, ChevronRight
+  ArrowLeft, MapPin, DollarSign, Clock, Briefcase,
+  Star, Award, CheckCircle2, ChevronRight, Globe
 } from 'lucide-react'
 import { Job } from '@/lib/mockData'
 import { clsx } from 'clsx'
@@ -89,14 +89,25 @@ export function JobDetailsClient({ job }: JobDetailsClientProps) {
                     { icon: MapPin, value: job.location || 'Remote', label: 'Location' },
                     { icon: DollarSign, value: job.salary || 'Competitive', label: 'Salary' },
                     { icon: Clock, value: new Date(job.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), label: 'Deadline' },
-                    { icon: Users, value: `${job.applicants || 0}`, label: 'Applicants' },
-                  ].map(({ icon: Icon, value, label }) => (
+                    ...(job.websiteUrl ? [{ icon: Globe, value: 'Visit Website', label: 'Company', isLink: true, url: job.websiteUrl }] : []),
+                  ].map(({ icon: Icon, value, label, isLink, url }) => (
                     <div key={label} className="bg-dark-700/50 rounded-xl p-3 border border-white/5">
                       <div className="flex items-center gap-1.5 text-gray-500 text-xs mb-1">
                         <Icon className="w-3.5 h-3.5" />
                         {label}
                       </div>
-                      <p className="text-white text-sm font-medium">{value}</p>
+                      {isLink ? (
+                        <a 
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-brand-violet text-sm font-medium hover:text-brand-pink transition-colors"
+                        >
+                          {value}
+                        </a>
+                      ) : (
+                        <p className="text-white text-sm font-medium">{value}</p>
+                      )}
                     </div>
                   ))}
                 </div>

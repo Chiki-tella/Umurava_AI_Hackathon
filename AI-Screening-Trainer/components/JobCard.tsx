@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { MapPin, Clock, Users, ArrowRight, DollarSign } from 'lucide-react'
+import { MapPin, Clock, ArrowRight, DollarSign, Globe } from 'lucide-react'
 import { Job } from '@/lib/mockData'
 import { clsx } from 'clsx'
 
@@ -90,10 +90,18 @@ export function JobCard({ job, index, highlighted }: JobCardProps) {
                 <Clock className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Deadline: {new Date(job.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               </div>
-              {job.applicants && (
+              {job.websiteUrl && (
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Users className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{job.applicants} applicants</span>
+                  <Globe className="w-3.5 h-3.5 flex-shrink-0" />
+                  <a 
+                    href={job.websiteUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    onClick={(e) => e.stopPropagation()}
+                    className="hover:text-brand-violet transition-colors underline"
+                  >
+                    Company Website
+                  </a>
                 </div>
               )}
             </div>

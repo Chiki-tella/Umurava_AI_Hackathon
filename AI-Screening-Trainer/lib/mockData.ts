@@ -45,7 +45,6 @@ export const jobs: Job[] = [
     salary: '$140k - $180k',
     location: 'San Francisco, CA (Hybrid)',
     type: 'Full-time',
-    applicants: 47,
     websiteUrl: 'https://techflow.ai',
   },
   {
@@ -61,7 +60,6 @@ export const jobs: Job[] = [
     salary: '$110k - $140k',
     location: 'Remote',
     type: 'Full-time',
-    applicants: 83,
     websiteUrl: 'https://designstudio.pro',
   },
   {
@@ -77,7 +75,6 @@ export const jobs: Job[] = [
     salary: '$130k - $160k',
     location: 'New York, NY (On-site)',
     type: 'Full-time',
-    applicants: 62,
     websiteUrl: 'https://cloudnative.io',
   },
   {
@@ -93,7 +90,6 @@ export const jobs: Job[] = [
     salary: '$120k - $155k',
     location: 'Austin, TX (Hybrid)',
     type: 'Full-time',
-    applicants: 38,
     websiteUrl: 'https://analytics.labs',
   },
   {
@@ -109,7 +105,6 @@ export const jobs: Job[] = [
     salary: '$150k - $190k',
     location: 'Seattle, WA (Remote)',
     type: 'Full-time',
-    applicants: 29,
     websiteUrl: 'https://infrastructure.co',
   },
   {
@@ -125,7 +120,6 @@ export const jobs: Job[] = [
     salary: '$115k - $145k',
     location: 'Los Angeles, CA (Hybrid)',
     type: 'Full-time',
-    applicants: 55,
     websiteUrl: 'https://mobilefirst.labs',
   },
 ]

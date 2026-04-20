@@ -55,9 +55,26 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && step < steps.length - 1) {
+      e.preventDefault()
+      // Don't submit on Enter in steps 0-2
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
+    
+    // Validate all required fields
+    const requiredFields = ['firstName', 'lastName', 'email', 'skills', 'experience', 'education']
+    const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]?.trim())
+    
+    if (missingFields.length > 0) {
+      alert(`Please fill in all required fields: ${missingFields.join(', ')}`)
+      return
+    }
+    
     setIsSubmitting(true)
     await new Promise((r) => setTimeout(r, 1500))
 
@@ -162,7 +179,7 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
         </div>
 
         <div className="glass-card p-8">
-          <form onSubmit={(e) => { e.preventDefault(); if (step === steps.length - 1) handleSubmit(e) }}>
+          <form onSubmit={handleSubmit}>
             <AnimatePresence mode="wait">
               {step === 0 && (
                 <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-6">
@@ -175,22 +192,22 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">First Name *</label>
-                      <input type="text" name="firstName" required value={formData.firstName} onChange={handleChange} placeholder="John" className="input-field" />
+                      <input type="text" name="firstName" required value={formData.firstName} onChange={handleChange} onKeyDown={handleKeyDown} placeholder="John" className="input-field" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">Last Name *</label>
-                      <input type="text" name="lastName" required value={formData.lastName} onChange={handleChange} placeholder="Doe" className="input-field" />
+                      <input type="text" name="lastName" required value={formData.lastName} onChange={handleChange} onKeyDown={handleKeyDown} placeholder="Doe" className="input-field" />
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       <Mail className="w-4 h-4 inline mr-1.5 text-gray-400" />Email Address *
                     </label>
-                    <input type="email" name="email" required value={formData.email} onChange={handleChange} placeholder="john@example.com" className="input-field" />
+                    <input type="email" name="email" required value={formData.email} onChange={handleChange} onKeyDown={handleKeyDown} placeholder="john@example.com" className="input-field" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Phone Number</label>
-                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" className="input-field" />
+                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} onKeyDown={handleKeyDown} placeholder="+1 (555) 000-0000" className="input-field" />
                   </div>
                 </motion.div>
               )}
@@ -207,7 +224,7 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       Skills * <span className="text-gray-500 font-normal">(comma-separated)</span>
                     </label>
-                    <input type="text" name="skills" required value={formData.skills} onChange={handleChange} placeholder="React, TypeScript, Next.js" className="input-field" />
+                    <input type="text" name="skills" required value={formData.skills} onChange={handleChange} onKeyDown={handleKeyDown} placeholder="React, TypeScript, Next.js" className="input-field" />
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       <span className="text-xs text-gray-500 mr-1">Required:</span>
                       {job.requiredSkills.map((skill) => (
@@ -219,7 +236,7 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       <Briefcase className="w-4 h-4 inline mr-1.5 text-gray-400" />Work Experience *
                     </label>
-                    <textarea name="experience" required rows={6} value={formData.experience} onChange={handleChange} placeholder="Describe your relevant work experience, projects, and achievements..." className="input-field resize-none" />
+                    <textarea name="experience" required rows={6} value={formData.experience} onChange={handleChange} onKeyDown={handleKeyDown} placeholder="Describe your relevant work experience, projects, and achievements..." className="input-field resize-none" />
                     <p className="text-xs text-gray-500 mt-1.5">Tip: Be specific about your impact and the technologies you used.</p>
                   </div>
                 </motion.div>
@@ -235,11 +252,11 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Education *</label>
-                    <input type="text" name="education" required value={formData.education} onChange={handleChange} placeholder="BS Computer Science, University Name" className="input-field" />
+                    <input type="text" name="education" required value={formData.education} onChange={handleChange} onKeyDown={handleKeyDown} placeholder="BS Computer Science, University Name" className="input-field" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Portfolio / GitHub URL</label>
-                    <input type="url" name="portfolio" value={formData.portfolio} onChange={handleChange} placeholder="https://github.com/username" className="input-field" />
+                    <input type="url" name="portfolio" value={formData.portfolio} onChange={handleChange} onKeyDown={handleKeyDown} placeholder="https://github.com/username" className="input-field" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Resume / CV</label>
