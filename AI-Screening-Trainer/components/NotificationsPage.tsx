@@ -18,48 +18,70 @@ export function NotificationsPage() {
   useEffect(() => {
     if (loading || !user) return
     
-    const allJobs = getAllJobs()
+    // Only run on client side
+    if (typeof window === 'undefined') return
     
-    if (user.role === 'applicant') {
-      // Applicant notifications
-      const notifs = getApplicantNotifications(user.id)
+    console.log('NotificationsPage: Loading notifications for user:', user.role, user.id)
+    
+    try {
+      const allJobs = getAllJobs()
+      console.log('NotificationsPage: Loaded jobs:', allJobs.length)
       
-      // Enrich notifications with job details
-      const enrichedNotifs = notifs.map(notif => {
-        const job = allJobs.find(j => j.id === notif.jobId)
-        return {
-          ...notif,
-          jobTitle: job?.title || 'Unknown Position',
-          company: job?.company || 'Unknown Company'
-        }
-      })
-      
-      setNotifications(enrichedNotifs)
-    } else if (user.role === 'recruiter') {
-      // Recruiter notifications - show sent notifications
-      const myJobs = allJobs.filter((j) => user?.jobIds?.includes(j.id))
-      const allSentNotifications: any[] = []
-      
-      myJobs.forEach(job => {
-        const applications = getApplicationsForJob(job.id)
-        const notifiedApps = applications.filter(app => app.notified && app.selected)
+      if (user.role === 'applicant') {
+        // Applicant notifications
+        const notifs = getApplicantNotifications(user.id)
+        console.log('NotificationsPage: Applicant notifications:', notifs.length)
         
-        notifiedApps.forEach(app => {
-          allSentNotifications.push({
-            id: app.id,
-            applicantName: app.applicantName,
-            applicantEmail: app.applicantEmail,
-            jobTitle: job.title,
-            company: job.company,
-            notifiedAt: app.submittedAt,
-          })
+        // Enrich notifications with job details
+        const enrichedNotifs = notifs.map(notif => {
+          const job = allJobs.find(j => j.id === notif.jobId)
+          return {
+            ...notif,
+            jobTitle: job?.title || 'Unknown Position',
+            company: job?.company || 'Unknown Company'
+          }
         })
-      })
+        
+        setNotifications(enrichedNotifs)
+      } else if (user.role === 'recruiter') {
+        // Recruiter notifications - show sent notifications
+        console.log('NotificationsPage: Recruiter jobIds:', user.jobIds)
+        const myJobs = user?.jobIds && user.jobIds.length > 0 
+          ? allJobs.filter((j) => user.jobIds.includes(j.id))
+          : []
+        
+        console.log('NotificationsPage: Recruiter jobs:', myJobs.length)
+        const allSentNotifications: any[] = []
+        
+        if (myJobs.length === 0) {
+          // Recruiter has no jobs assigned
+          setSentNotifications([])
+        } else {
+          myJobs.forEach(job => {
+            const applications = getApplicationsForJob(job.id)
+            const notifiedApps = applications.filter(app => app.notified && (app.status === 'selected' || app.status === 'accepted' || app.status === 'rejected'))
+            
+            notifiedApps.forEach(app => {
+              allSentNotifications.push({
+                id: app.id,
+                applicantName: app.applicantName,
+                applicantEmail: app.applicantEmail,
+                jobTitle: job.title,
+                company: job.company,
+                notifiedAt: app.selectedAt || app.acceptedAt || app.rejectedAt || app.submittedAt,
+                status: app.status
+              })
+            })
+          })
+          
+          setSentNotifications(allSentNotifications)
+        }
+      }
       
-      setSentNotifications(allSentNotifications)
+      setJobs(allJobs)
+    } catch (error) {
+      console.error('Error loading notifications:', error)
     }
-    
-    setJobs(allJobs)
   }, [user, loading])
 
   if (loading || !user) {
@@ -69,6 +91,7 @@ export function NotificationsPage() {
       </div>
     )
   }
+
 
   // Applicant view
   if (user.role === 'applicant') {
@@ -108,32 +131,79 @@ export function NotificationsPage() {
                 </Link>
               </div>
             ) : (
-              notifications.map((notification, index) => (
-                <motion.div
-                  key={notification.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="glass-card p-6 border-emerald-500/20 bg-emerald-500/5"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
-                      <CheckCircle2 className="w-6 h-6 text-emerald-400" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-4 mb-2">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white mb-1">
-                            Congratulations! You've been selected
-                          </h3>
-                          <p className="text-gray-300 mb-3">
-                            {notification.message}
-                          </p>
-                        </div>
-                        <span className="badge badge-success text-xs">
-                          Selected
-                        </span>
+              notifications.map((notification, index) => {
+                const getNotificationStyle = (type: 'selected' | 'accepted' | 'rejected') => {
+                  switch (type) {
+                    case 'accepted':
+                      return {
+                        border: 'border-green-500/20',
+                        bg: 'bg-green-500/5',
+                        iconBg: 'bg-green-500/10',
+                        iconBorder: 'border-green-500/30',
+                        iconColor: 'text-green-400',
+                        badge: 'badge-success',
+                        title: 'Congratulations! You have been accepted!',
+                        badgeText: 'Accepted'
+                      }
+                    case 'rejected':
+                      return {
+                        border: 'border-red-500/20',
+                        bg: 'bg-red-500/5',
+                        iconBg: 'bg-red-500/10',
+                        iconBorder: 'border-red-500/30',
+                        iconColor: 'text-red-400',
+                        badge: 'badge-danger',
+                        title: 'Application Update',
+                        badgeText: 'Rejected'
+                      }
+                    default: // selected
+                      return {
+                        border: 'border-emerald-500/20',
+                        bg: 'bg-emerald-500/5',
+                        iconBg: 'bg-emerald-500/10',
+                        iconBorder: 'border-emerald-500/30',
+                        iconColor: 'text-emerald-400',
+                        badge: 'badge-success',
+                        title: 'Congratulations! You have been selected for the interview stage',
+                        badgeText: 'Interview Stage'
+                      }
+                  }
+                }
+
+                const style = getNotificationStyle(notification.type)
+
+                return (
+                  <motion.div
+                    key={notification.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    className={`glass-card p-6 ${style.border} ${style.bg}`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-2xl ${style.iconBg} ${style.iconBorder} flex items-center justify-center flex-shrink-0`}>
+                        {notification.type === 'accepted' ? (
+                          <CheckCircle2 className={`w-6 h-6 ${style.iconColor}`} />
+                        ) : notification.type === 'rejected' ? (
+                          <XCircle className={`w-6 h-6 ${style.iconColor}`} />
+                        ) : (
+                          <CheckCircle2 className={`w-6 h-6 ${style.iconColor}`} />
+                        )}
                       </div>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <div>
+                            <h3 className="text-lg font-semibold text-white mb-1">
+                              {style.title}
+                            </h3>
+                            <p className="text-gray-300 mb-3">
+                              {notification.message}
+                            </p>
+                          </div>
+                          <span className={`badge ${style.badge} text-xs`}>
+                            {style.badgeText}
+                          </span>
+                        </div>
                       
                       <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-4">
                         <div className="flex items-center gap-1.5">
@@ -152,7 +222,12 @@ export function NotificationsPage() {
 
                       <div className="flex items-center justify-between pt-4 border-t border-white/5">
                         <p className="text-sm text-gray-500">
-                          Check your email for detailed information about next steps.
+                          {notification.type === 'accepted' 
+                            ? 'Welcome to the team! Check your email for onboarding details.'
+                            : notification.type === 'rejected'
+                            ? 'Thank you for your time. We wish you the best in your job search.'
+                            : 'Check your email for interview scheduling details.'
+                          }
                         </p>
                         <Link 
                           href={`/job/${notification.jobId}`}
@@ -164,7 +239,7 @@ export function NotificationsPage() {
                     </div>
                   </div>
                 </motion.div>
-              ))
+              )}
             )}
           </div>
         </motion.div>
@@ -289,3 +364,4 @@ export function NotificationsPage() {
     </div>
   )
 }
+

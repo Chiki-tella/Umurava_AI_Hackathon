@@ -9,7 +9,7 @@ import {
   Mail, Send, UserCheck
 } from 'lucide-react'
 import { getAllJobs } from '@/lib/jobs'
-import { getApplicationsForJob, scoreApplication, saveScreeningResults, selectCandidate, notifySelectedCandidate, type Application } from '@/lib/applications'
+import { getApplicationsForJob, scoreApplication, saveScreeningResults, selectCandidate, notifySelectedCandidate, acceptCandidate, rejectCandidate, deleteApplication, type Application } from '@/lib/applications'
 import { clsx } from 'clsx'
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts'
 import { useAuthContext } from '@/components/AuthProvider'
@@ -28,7 +28,7 @@ function getScoreConfig(score: number) {
   return { color: 'text-red-400', bg: 'bg-red-500', badge: 'badge-danger', label: 'Below Average' }
 }
 
-function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSelect, onNotify }: {
+function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSelect, onNotify, onAccept, onReject, onDelete }: {
   app: Application
   index: number
   isExpanded: boolean
@@ -36,6 +36,9 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSel
   requiredSkills: string[]
   onSelect: (id: string) => void
   onNotify: (id: string) => void
+  onAccept: (id: string) => void
+  onReject: (id: string) => void
+  onDelete: (id: string) => void
 }) {
   const score = getScoreConfig(app.matchScore ?? 0)
   const medal = MEDAL_COLORS[index]
@@ -156,40 +159,92 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSel
         </button>
 
         {/* Action Buttons */}
-        <div className="mt-4 flex items-center gap-3">
-          {app.selected ? (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-              <UserCheck className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm text-emerald-400 font-medium">Selected</span>
-            </div>
-          ) : (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {/* Status-based actions */}
+          {app.status === 'submitted' || app.status === 'screened' ? (
             <button
               onClick={() => onSelect(app.id)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-purple/10 border border-brand-purple/20 hover:bg-brand-purple/20 text-sm text-brand-violet font-medium transition-all"
             >
               <UserCheck className="w-4 h-4" />
-              Select Candidate
+              Select for Interview
             </button>
-          )}
+          ) : app.status === 'selected' ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <UserCheck className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm text-emerald-400 font-medium">Selected</span>
+            </div>
+          ) : app.status === 'accepted' ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-500/10 border border-green-500/20">
+              <CheckCircle2 className="w-4 h-4 text-green-400" />
+              <span className="text-sm text-green-400 font-medium">Accepted</span>
+            </div>
+          ) : app.status === 'rejected' ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
+              <XCircle className="w-4 h-4 text-red-400" />
+              <span className="text-sm text-red-400 font-medium">Rejected</span>
+            </div>
+          ) : app.status === 'deleted' ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-500/10 border border-gray-500/20">
+              <AlertCircle className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-400 font-medium">Deleted</span>
+            </div>
+          ) : null}
           
-          {app.selected && !app.notified && (
+          {/* Notification button */}
+          {app.status === 'selected' && !app.notified && (
             <button
               onClick={() => onNotify(app.id)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-sm text-emerald-400 font-medium transition-all"
             >
               <Send className="w-4 h-4" />
-              Send Notification
+              Send Interview Invite
             </button>
           )}
           
-          {app.notified && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-              <Mail className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm text-emerald-400 font-medium">Notified</span>
+          {app.notified && app.status !== 'deleted' && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <Mail className="w-4 h-4 text-blue-400" />
+              <span className="text-sm text-blue-400 font-medium">Notified</span>
             </div>
           )}
           
-          <button onClick={onToggle} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-sm text-gray-400 hover:text-white transition-all">
+          {/* Accept/Reject buttons for selected candidates */}
+          {app.status === 'selected' && app.notified && (
+            <>
+              <button
+                onClick={() => onAccept(app.id)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 text-sm text-green-400 font-medium transition-all"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Accept
+              </button>
+              <button
+                onClick={() => onReject(app.id)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-sm text-red-400 font-medium transition-all"
+              >
+                <XCircle className="w-4 h-4" />
+                Reject
+              </button>
+            </>
+          )}
+          
+          {/* Delete button for non-accepted candidates */}
+          {app.status !== 'accepted' && app.status !== 'deleted' && (
+            <button
+              onClick={() => onDelete(app.id)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-500/10 border border-gray-500/20 hover:bg-gray-500/20 text-sm text-gray-400 font-medium transition-all"
+            >
+              <AlertCircle className="w-4 h-4" />
+              Remove
+            </button>
+          )}
+          
+          {/* Expand/Collapse button */}
+          <button 
+            onClick={onToggle} 
+            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-sm text-gray-400 hover:text-white transition-all min-w-0"
+          >
             {isExpanded ? <>Hide Details <ChevronUp className="w-4 h-4" /></> : <>View Full Profile <ChevronDown className="w-4 h-4" /></>}
           </button>
         </div>
@@ -349,6 +404,49 @@ export function RecruiterDashboard() {
       setApplications(updated)
     } else {
       alert(result.message)
+    }
+  }
+
+  const handleAcceptCandidate = (applicationId: string) => {
+    const result = acceptCandidate(applicationId)
+    if (result.success) {
+      alert(result.message)
+      // Reload applications to update UI
+      const updated = getApplicationsForJob(selectedJobId)
+        .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
+      setApplications(updated)
+    } else {
+      alert(result.message)
+    }
+  }
+
+  const handleRejectCandidate = (applicationId: string) => {
+    if (confirm('Are you sure you want to reject this candidate? They will receive a rejection notification.')) {
+      const result = rejectCandidate(applicationId)
+      if (result.success) {
+        alert(result.message)
+        // Reload applications to update UI
+        const updated = getApplicationsForJob(selectedJobId)
+          .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
+        setApplications(updated)
+      } else {
+        alert(result.message)
+      }
+    }
+  }
+
+  const handleDeleteApplication = (applicationId: string) => {
+    if (confirm('Are you sure you want to remove this application? This cannot be undone and no notification will be sent.')) {
+      const result = deleteApplication(applicationId)
+      if (result.success) {
+        alert(result.message)
+        // Reload applications to update UI
+        const updated = getApplicationsForJob(selectedJobId)
+          .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
+        setApplications(updated)
+      } else {
+        alert(result.message)
+      }
     }
   }
 
@@ -517,6 +615,9 @@ export function RecruiterDashboard() {
                       requiredSkills={selectedJob?.requiredSkills ?? []}
                       onSelect={handleSelectCandidate}
                       onNotify={handleNotifyCandidate}
+                      onAccept={handleAcceptCandidate}
+                      onReject={handleRejectCandidate}
+                      onDelete={handleDeleteApplication}
                     />
                   ))}
                 </div>
