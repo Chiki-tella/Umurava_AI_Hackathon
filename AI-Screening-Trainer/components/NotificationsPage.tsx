@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Bell, CheckCircle2, Mail, Briefcase, Calendar, ArrowRight, Users, Send, AlertCircle } from 'lucide-react'
+import { Bell, CheckCircle2, Mail, Briefcase, Calendar, ArrowRight, Users, Send, AlertCircle, XCircle } from 'lucide-react'
 import { useAuthContext } from '@/components/AuthProvider'
 import { getApplicantNotifications, getApplicationsForJob } from '@/lib/applications'
 import { getAllJobs } from '@/lib/jobs'
-import { clsx } from 'clsx'
+
 import Link from 'next/link'
 
 export function NotificationsPage() {
@@ -47,7 +47,7 @@ export function NotificationsPage() {
         // Recruiter notifications - show sent notifications
         console.log('NotificationsPage: Recruiter jobIds:', user.jobIds)
         const myJobs = user?.jobIds && user.jobIds.length > 0 
-          ? allJobs.filter((j) => user.jobIds.includes(j.id))
+          ? allJobs.filter((j) => user.jobIds!.includes(j.id))
           : []
         
         console.log('NotificationsPage: Recruiter jobs:', myJobs.length)
@@ -239,7 +239,8 @@ export function NotificationsPage() {
                     </div>
                   </div>
                 </motion.div>
-              )}
+              )
+            })
             )}
           </div>
         </motion.div>
