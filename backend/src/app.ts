@@ -9,12 +9,17 @@ import notificationRoutes from "./routes/notification.routes";
 
 import { globalErrorHandler, notFoundHandler } from "./middleware/error.middleware";
 
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./swagger.json";
+
 dotenv.config();
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
