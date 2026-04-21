@@ -2,26 +2,61 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getAllJobs } from '@/lib/jobs'
+import { getJobs } from '@/lib/jobs-backend'
 import { JobCard } from '@/components/JobCard'
-import { useAuthContext } from '@/components/AuthProvider'
+import { useAuthContextNew } from '@/components/AuthProviderNew'
 import { Sparkles, Briefcase, Filter } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export function JobsPage() {
-  const { user, loading } = useAuthContext()
+  const { user, loading } = useAuthContextNew()
   const router = useRouter()
 
-  const [allJobs, setAllJobs] = useState(() => getAllJobs())
+  const [allJobs, setAllJobs] = useState<any[]>([])
+  const [loadingJobs, setLoadingJobs] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    if (loading) return
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted || loading) return
     if (!user) { router.replace('/auth'); return }
     if (user.role === 'recruiter') { router.replace('/dashboard'); return }
-    setAllJobs(getAllJobs())
-  }, [user, loading, router])
+    
+    // Fetch jobs from backend
+    const fetchJobs = async () => {
+      setLoadingJobs(true)
+      try {
+        console.log('🔍 Fetching jobs from backend...')
+        const result = await getJobs()
+        console.log('📡 Jobs API response:', result)
+        
+        if ('jobs' in result) {
+          console.log('✅ Successfully fetched jobs:', result.jobs.length, 'jobs found')
+          setAllJobs(result.jobs)
+        } else if ('error' in result) {
+          console.log('❌ Jobs API returned error:', result.error)
+        } else {
+          console.log('❓ Unexpected jobs API response:', result)
+        }
+      } catch (error) {
+        console.error('💥 Failed to fetch jobs:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          config: error.config
+        })
+      } finally {
+        setLoadingJobs(false)
+      }
+    }
+    
+    fetchJobs()
+  }, [mounted, user, loading, router])
 
-  if (loading || !user) {
+  if (loading || !user || loadingJobs) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-brand-purple/30 border-t-brand-purple rounded-full animate-spin" />

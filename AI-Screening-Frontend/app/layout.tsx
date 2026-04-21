@@ -3,7 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/Navbar'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import { AuthProvider } from '@/components/AuthProvider'
+import { AuthProviderNew } from '@/components/AuthProviderNew'
+import { NoSSR } from '@/components/NoSSR'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,7 +22,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          <AuthProvider>
+          <NoSSR fallback={<div className="min-h-screen bg-dark-900 flex items-center justify-center">
+            <div className="w-10 h-10 border-2 border-brand-purple/30 border-t-brand-purple rounded-full animate-spin" />
+          </div>}>
+            <AuthProviderNew>
             <div className="min-h-screen bg-dark-900 text-white">
               <div className="fixed inset-0 bg-hero-glow pointer-events-none" />
               <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-purple/10 via-transparent to-transparent pointer-events-none" />
@@ -32,7 +36,8 @@ export default function RootLayout({
                 <main>{children}</main>
               </div>
             </div>
-          </AuthProvider>
+          </AuthProviderNew>
+          </NoSSR>
         </ThemeProvider>
       </body>
     </html>

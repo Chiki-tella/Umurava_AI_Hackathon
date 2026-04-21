@@ -7,8 +7,8 @@ import {
   Zap, Mail, User, Building2, Briefcase, MapPin, Code,
   ArrowRight, Sparkles, ChevronRight, Plus, X, Eye, EyeOff
 } from 'lucide-react'
-import { signIn, signUp, type UserRole } from '@/lib/auth'
-import { useAuthContext } from '@/components/AuthProvider'
+import { signIn, signUp, type UserRole } from '@/lib/auth-backend'
+import { useAuthContextNew } from '@/components/AuthProviderNew'
 import { clsx } from 'clsx'
 import { addJob } from '@/lib/jobs'
 
@@ -24,11 +24,11 @@ type Mode = 'signin' | 'signup-role' | 'signup-applicant' | 'signup-recruiter' |
 
 export function AuthPage() {
   const router = useRouter()
-  const { user: currentUser, loading: authLoading, refresh } = useAuthContext()
+  const { user: currentUser, loading: authLoading, refresh } = useAuthContextNew()
   const [mode, setMode] = useState<Mode>('signin')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [newRecruiterUser, setNewRecruiterUser] = useState<import('@/lib/auth').User | null>(null)
+  const [newRecruiterUser, setNewRecruiterUser] = useState<import('@/lib/auth-backend').User | null>(null)
 
   // Redirect already-logged-in users immediately
   useEffect(() => {
@@ -50,7 +50,7 @@ export function AuthPage() {
   const [suPassword, setSuPassword] = useState('')
   const [suConfirm, setSuConfirm] = useState('')
   const [suShowPw, setSuShowPw] = useState(false)
-  const [suRole, setSuRole] = useState<UserRole>('applicant')
+  const [suRole, setSuRole] = useState<UserRole>('jobseeker')
 
   // Applicant extras
   const [prefRoles, setPrefRoles] = useState<string[]>([])
@@ -74,13 +74,22 @@ export function AuthPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 600))
-    const result = signIn(siEmail, siPassword)
-    setLoading(false)
-    if ('error' in result) { setError(result.error); return }
-    refresh()
-    if (result.user.role === 'admin') router.push('/admin')
-    else router.push(result.user.role === 'recruiter' ? '/dashboard' : '/jobs')
+    try {
+      await new Promise((r) => setTimeout(r, 600))
+      const result = await signIn(siEmail, siPassword)
+      setLoading(false)
+      if ('error' in result) { 
+        setError(result.error); 
+        return 
+      }
+      await refresh()
+      if (result.user.role === 'admin') router.push('/admin')
+      else router.push(result.user.role === 'recruiter' ? '/dashboard' : '/jobs')
+    } catch (error) {
+      console.error('Sign in error:', error)
+      setError('An unexpected error occurred. Please try again.')
+      setLoading(false)
+    }
   }
 
   // Applicant signup
@@ -88,20 +97,29 @@ export function AuthPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 800))
-    const result = signUp({
-      email: suEmail,
-      name: suName,
-      role: 'applicant',
-      password: suPassword,
-      preferredRoles: prefRoles,
-      preferredLocations: prefLocations,
-      skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
-    })
-    setLoading(false)
-    if ('error' in result) { setError(result.error); return }
-    refresh()
-    router.push('/jobs')
+    try {
+      await new Promise((r) => setTimeout(r, 800))
+      const result = await signUp({
+        email: suEmail,
+        fullName: suName,
+        role: 'jobseeker',
+        interestedRoles: prefRoles,
+        preferredLocations: prefLocations,
+        skills: skills,
+        password: suPassword,
+      })
+      setLoading(false)
+      if ('error' in result) { 
+        setError(result.error); 
+        return 
+      }
+      await refresh()
+      router.push('/jobs')
+    } catch (error) {
+      console.error('Sign up error:', error)
+      setError('An unexpected error occurred. Please try again.')
+      setLoading(false)
+    }
   }
 
   // Recruiter signup → then post a job
@@ -109,13 +127,28 @@ export function AuthPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 800))
-    const result = signUp({ email: suEmail, name: suName, role: 'recruiter', company, password: suPassword })
-    setLoading(false)
-    if ('error' in result) { setError(result.error); return }
-    refresh()
-    setNewRecruiterUser(result.user)
-    setMode('post-job')
+    try {
+      await new Promise((r) => setTimeout(r, 800))
+      const result = await signUp({
+        email: suEmail,
+        fullName: suName,
+        role: 'recruiter',
+        companyName: company,
+        password: suPassword,
+      })
+      setLoading(false)
+      if ('error' in result) { 
+        setError(result.error); 
+        return 
+      }
+      await refresh()
+      setNewRecruiterUser(result.user)
+      setMode('post-job')
+    } catch (error) {
+      console.error('Recruiter sign up error:', error)
+      setError('An unexpected error occurred. Please try again.')
+      setLoading(false)
+    }
   }
 
   const handlePostJob = async (e: React.FormEvent) => {
@@ -224,12 +257,12 @@ export function AuthPage() {
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   {([
-                    { role: 'applicant' as UserRole, icon: User, title: 'Job Seeker', desc: 'Browse jobs & apply' },
+                    { role: 'jobseeker' as UserRole, icon: User, title: 'Job Seeker', desc: 'Browse jobs & apply' },
                     { role: 'recruiter' as UserRole, icon: Building2, title: 'Recruiter', desc: 'Post jobs & screen candidates' },
                   ]).map(({ role, icon: Icon, title, desc }) => (
                     <button
                       key={role}
-                      onClick={() => { setSuRole(role); setMode(role === 'applicant' ? 'signup-applicant' : 'signup-recruiter') }}
+                      onClick={() => { setSuRole(role); setMode(role === 'jobseeker' ? 'signup-applicant' : 'signup-recruiter') }}
                       className={clsx(
                         'p-5 rounded-2xl border text-left transition-all duration-200 hover:border-brand-purple/50 hover:bg-brand-purple/5',
                         'bg-dark-700/50 border-white/10'

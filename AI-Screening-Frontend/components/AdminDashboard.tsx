@@ -8,7 +8,7 @@ import {
   Building2, User, ChevronDown, ChevronUp, Search,
   CheckCircle2, XCircle, Clock, Zap, BarChart3, Star
 } from 'lucide-react'
-import { useAuthContext } from '@/components/AuthProvider'
+import { useAuthContextNew } from '@/components/AuthProviderNew'
 import { getAllUsers, type User as AuthUser } from '@/lib/auth'
 import { getAllJobs } from '@/lib/jobs'
 import { getApplications } from '@/lib/applications'
@@ -60,7 +60,7 @@ function SearchBar({ value, onChange, placeholder }: { value: string; onChange: 
 }
 
 export function AdminDashboard() {
-  const { user, loading: authLoading } = useAuthContext()
+  const { user, loading: authLoading } = useAuthContextNew()
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('overview')
   const [search, setSearch] = useState('')

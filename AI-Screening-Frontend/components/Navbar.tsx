@@ -4,13 +4,13 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Briefcase, LayoutDashboard, Zap, LogOut, User, ChevronDown, ShieldCheck, Bell } from 'lucide-react'
 import { clsx } from 'clsx'
-import { useAuthContext } from '@/components/AuthProvider'
+import { useAuthContextNew } from '@/components/AuthProviderNew'
 import { useState, useRef, useEffect } from 'react'
 
 export function Navbar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, signOut } = useAuthContext()
+  const { user, signOut } = useAuthContextNew()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -132,21 +132,21 @@ export function Navbar() {
                   className="flex items-center gap-2 px-3 py-2 rounded-xl bg-dark-800/50 border border-white/10 hover:border-white/20 transition-all"
                 >
                   <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-purple to-brand-pink flex items-center justify-center text-white text-xs font-bold">
-                    {user.name.charAt(0).toUpperCase()}
+                    {user?.fullName?.charAt(0)?.toUpperCase() || user?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
                   <div className="hidden sm:block text-left">
-                    <p className="text-sm font-medium text-white leading-none">{user.name.split(' ')[0]}</p>
-                    <p className="text-xs text-gray-500 capitalize">{user.role}</p>                  </div>
+                    <p className="text-sm font-medium text-white leading-none">{user?.fullName?.split(' ')[0] || user?.name?.split(' ')[0] || 'User'}</p>
+                    <p className="text-xs text-gray-500 capitalize">{user?.role || 'user'}</p>                  </div>
                   <ChevronDown className={clsx('w-4 h-4 text-gray-400 transition-transform', menuOpen && 'rotate-180')} />
                 </button>
 
                 {menuOpen && (
                   <div className="absolute right-0 top-full mt-2 w-52 glass-card py-2 shadow-card">
                     <div className="px-4 py-2 border-b border-white/5 mb-1">
-                      <p className="text-sm font-medium text-white">{user.name}</p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
+                      <p className="text-sm font-medium text-white">{user?.fullName || user?.name || 'User'}</p>
+                      <p className="text-xs text-gray-500">{user?.email || 'user@example.com'}</p>
                     </div>
-                    {user.role === 'applicant' && (
+                    {user?.role === 'jobseeker' && (
                       <Link
                         href="/notifications"
                         onClick={() => setMenuOpen(false)}

@@ -2,8 +2,8 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthContext } from '@/components/AuthProvider'
-import type { UserRole } from '@/lib/auth'
+import { useAuthContextNew } from '@/components/AuthProviderNew'
+import type { UserRole } from '@/lib/auth-backend'
 
 interface RouteGuardProps {
   children: React.ReactNode
@@ -11,7 +11,7 @@ interface RouteGuardProps {
 }
 
 export function RouteGuard({ children, requiredRole }: RouteGuardProps) {
-  const { user, loading } = useAuthContext()
+  const { user, loading } = useAuthContextNew()
   const router = useRouter()
 
   useEffect(() => {

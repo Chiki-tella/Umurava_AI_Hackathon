@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { MapPin, Clock, ArrowRight, DollarSign, Globe } from 'lucide-react'
-import { Job } from '@/lib/mockData'
+import { Job } from '@/lib/jobs-backend'
 import { clsx } from 'clsx'
 
 interface JobCardProps {
@@ -22,8 +22,10 @@ const companyColors: Record<string, string> = {
 }
 
 export function JobCard({ job, index, highlighted }: JobCardProps) {
-  const gradient = companyColors[job.company] || 'from-brand-purple to-brand-violet'
-  const initials = job.company.split(' ').map((w) => w[0]).join('').slice(0, 2)
+  // For backend jobs, we don't have company info, so use a default
+  const companyName = 'Company' // This would need to be populated from job creator info
+  const gradient = companyColors[companyName] || 'from-brand-purple to-brand-violet'
+  const initials = companyName.split(' ').map((w) => w[0]).join('').slice(0, 2)
 
   return (
     <motion.div
@@ -31,7 +33,7 @@ export function JobCard({ job, index, highlighted }: JobCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.08 }}
     >
-      <Link href={`/job/${job.id}`} className="group block h-full">
+      <Link href={`/job/${job._id}`} className="group block h-full">
         <div className={clsx(
             'relative h-full glass-card p-6 flex flex-col overflow-hidden transition-all duration-300 hover:border-white/20 hover:shadow-card-hover hover:-translate-y-1',
             highlighted && 'border-brand-purple/30 shadow-glow-purple'
@@ -67,69 +69,43 @@ export function JobCard({ job, index, highlighted }: JobCardProps) {
 
           {/* Job info */}
           <div className="relative z-10 flex-1">
-            <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-brand-violet transition-colors">
+            <h3 className="text-xl font-bold text-white mb-3 group-hover:text-brand-purple transition-colors">
               {job.title}
             </h3>
-            <p className="text-gray-400 text-sm mb-4">{job.company}</p>
-
-            {/* Meta */}
-            <div className="space-y-2 mb-5">
-              {job.location && (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{job.location}</span>
-                </div>
-              )}
-              {job.salary && (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <DollarSign className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{job.salary}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>Deadline: {new Date(job.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-              </div>
-              {job.websiteUrl && (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Globe className="w-3.5 h-3.5 flex-shrink-0" />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      window.open(job.websiteUrl, '_blank', 'noopener,noreferrer')
-                    }}
-                    className="hover:text-brand-violet transition-colors underline text-left"
-                  >
-                    Company Website
-                  </button>
-                </div>
-              )}
-            </div>
+            
+            <p className="text-gray-300 text-sm mb-4 line-clamp-3">
+              {job.description}
+            </p>
 
             {/* Skills */}
-            <div className="flex flex-wrap gap-1.5 mb-5">
-              {job.requiredSkills.slice(0, 3).map((skill) => (
-                <span
-                  key={skill}
-                  className="px-2.5 py-1 rounded-lg bg-brand-purple/10 text-brand-violet border border-brand-purple/20 text-xs font-medium"
-                >
+            <div className="flex flex-wrap gap-2 mb-4">
+              {job.requiredSkills.slice(0, 3).map((skill, idx) => (
+                <span key={idx} className="px-2 py-1 bg-brand-purple/10 text-brand-purple text-xs rounded-full border border-brand-purple/20">
                   {skill}
                 </span>
               ))}
               {job.requiredSkills.length > 3 && (
-                <span className="px-2.5 py-1 rounded-lg bg-white/5 text-gray-400 border border-white/10 text-xs">
-                  +{job.requiredSkills.length - 3}
+                <span className="px-2 py-1 bg-gray-500/10 text-gray-400 text-xs rounded-full border border-gray-500/20">
+                  +{job.requiredSkills.length - 3} more
                 </span>
               )}
             </div>
-          </div>
 
-          {/* Footer */}
-          <div className="relative z-10 pt-4 border-t border-white/5 flex items-center justify-between">
-            <span className="text-xs text-gray-500">{job.experienceLevel}</span>
-            <div className="flex items-center gap-1.5 text-brand-violet text-sm font-medium group-hover:gap-2.5 transition-all">
-              <span>View Role</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {/* Location */}
+            <div className="flex items-center text-gray-400 text-sm mb-4">
+              <MapPin className="w-4 h-4 mr-1.5" />
+              {job.location}
+            </div>
+
+            {/* Bottom row */}
+            <div className="flex items-center justify-between pt-4 border-t border-white/5">
+              <div className="flex items-center text-gray-500 text-xs">
+                <Clock className="w-3 h-3 mr-1" />
+                Posted {new Date(job.createdAt).toLocaleDateString()}
+              </div>
+              <div className="flex items-center text-brand-violet group-hover:text-brand-pink transition-colors text-sm font-medium">
+                View Details <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+              </div>
             </div>
           </div>
         </div>

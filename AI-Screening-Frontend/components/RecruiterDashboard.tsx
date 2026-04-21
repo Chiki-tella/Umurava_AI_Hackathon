@@ -12,7 +12,7 @@ import { getAllJobs } from '@/lib/jobs'
 import { getApplicationsForJob, scoreApplication, saveScreeningResults, selectCandidate, notifySelectedCandidate, acceptCandidate, rejectCandidate, deleteApplication, type Application } from '@/lib/applications'
 import { clsx } from 'clsx'
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts'
-import { useAuthContext } from '@/components/AuthProvider'
+import { useAuthContextNew } from '@/components/AuthProviderNew'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -314,7 +314,7 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSel
 }
 
 export function RecruiterDashboard() {
-  const { user, loading: authLoading } = useAuthContext()
+  const { user, loading: authLoading } = useAuthContextNew()
   const router = useRouter()
 
   const [selectedJobId, setSelectedJobId] = useState('')

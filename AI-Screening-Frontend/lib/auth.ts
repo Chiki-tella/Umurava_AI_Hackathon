@@ -1,7 +1,7 @@
 // Simple client-side auth store (demo/hackathon — no backend)
 // In production this would be replaced with NextAuth / Supabase / etc.
 
-export type UserRole = 'applicant' | 'recruiter' | 'admin'
+export type UserRole = 'jobseeker' | 'recruiter' | 'admin'
 
 export interface User {
   id: string
@@ -9,7 +9,7 @@ export interface User {
   name: string
   role: UserRole
   passwordHash: string
-  // Applicant-specific
+  // JobSeeker-specific
   preferredRoles?: string[]
   preferredLocations?: string[]
   skills?: string[]

@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { User, Mail, Briefcase, MapPin, Code, Save, CheckCircle2, Building2 } from 'lucide-react'
-import { useAuthContext } from '@/components/AuthProvider'
-import { updateUser } from '@/lib/auth'
-import { getApplicationsByApplicant } from '@/lib/applications'
-import { jobs } from '@/lib/mockData'
+import { useAuthContextNew } from '@/components/AuthProviderNew'
+import { updateUserProfile } from '@/lib/auth-backend'
+import { getMyApplications } from '@/lib/applications-backend'
+import { getJobs } from '@/lib/jobs-backend'
 import { clsx } from 'clsx'
 
 const ROLE_OPTIONS = [
@@ -18,7 +18,7 @@ const ROLE_OPTIONS = [
 const LOCATION_OPTIONS = ['Remote', 'San Francisco', 'New York', 'Austin', 'Seattle', 'Los Angeles']
 
 export function ProfilePage() {
-  const { user, loading, refresh } = useAuthContext()
+  const { user, loading, refresh } = useAuthContextNew()
   const router = useRouter()
   const [saved, setSaved] = useState(false)
 

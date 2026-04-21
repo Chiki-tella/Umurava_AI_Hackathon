@@ -5,10 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Upload, CheckCircle2, Sparkles, ChevronRight, User, Mail, Code, Briefcase, GraduationCap, AlertCircle } from 'lucide-react'
-import { Job } from '@/lib/mockData'
+import { Job } from '@/lib/jobs-backend'
 import { clsx } from 'clsx'
-import { useAuthContext } from '@/components/AuthProvider'
-import { submitApplication, hasApplied } from '@/lib/applications'
+import { useAuthContextNew } from '@/components/AuthProviderNew'
+import { applyToJob } from '@/lib/applications-backend'
 
 interface ApplicationFormClientProps {
   job: Job
@@ -18,7 +18,7 @@ const steps = ['Personal Info', 'Skills & Experience', 'Education & CV']
 
 export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
   const router = useRouter()
-  const { user, loading } = useAuthContext()
+  const { user, loading } = useAuthContextNew()
   const [step, setStep] = useState(0)
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)

@@ -3,86 +3,81 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Bell, CheckCircle2, Mail, Briefcase, Calendar, ArrowRight, Users, Send, AlertCircle, XCircle } from 'lucide-react'
-import { useAuthContext } from '@/components/AuthProvider'
-import { getApplicantNotifications, getApplicationsForJob } from '@/lib/applications'
-import { getAllJobs } from '@/lib/jobs'
+import { useAuthContextNew } from '@/components/AuthProviderNew'
+import { getNotifications } from '@/lib/notifications-backend'
+import { getMyApplications } from '@/lib/applications-backend'
+import { getJobs } from '@/lib/jobs-backend'
 
 import Link from 'next/link'
 
 export function NotificationsPage() {
-  const { user, loading } = useAuthContext()
+  const { user, loading } = useAuthContextNew()
   const [notifications, setNotifications] = useState<any[]>([])
   const [jobs, setJobs] = useState<any[]>([])
   const [sentNotifications, setSentNotifications] = useState<any[]>([])
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    if (loading || !user) return
-    
-    // Only run on client side
-    if (typeof window === 'undefined') return
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted || loading || !user) return
     
     console.log('NotificationsPage: Loading notifications for user:', user.role, user.id)
     
-    try {
-      const allJobs = getAllJobs()
-      console.log('NotificationsPage: Loaded jobs:', allJobs.length)
-      
-      if (user.role === 'applicant') {
-        // Applicant notifications
-        const notifs = getApplicantNotifications(user.id)
-        console.log('NotificationsPage: Applicant notifications:', notifs.length)
+    const loadData = async () => {
+      try {
+        console.log('🔍 Loading notifications for user:', user.role, user.id)
         
-        // Enrich notifications with job details
-        const enrichedNotifs = notifs.map(notif => {
-          const job = allJobs.find(j => j.id === notif.jobId)
-          return {
-            ...notif,
-            jobTitle: job?.title || 'Unknown Position',
-            company: job?.company || 'Unknown Company'
-          }
-        })
+        // Load notifications from backend
+        console.log('📬 Fetching notifications...')
+        const notificationsResult = await getNotifications()
+        console.log('📡 Notifications API response:', notificationsResult)
         
-        setNotifications(enrichedNotifs)
-      } else if (user.role === 'recruiter') {
-        // Recruiter notifications - show sent notifications
-        console.log('NotificationsPage: Recruiter jobIds:', user.jobIds)
-        const myJobs = user?.jobIds && user.jobIds.length > 0 
-          ? allJobs.filter((j) => user.jobIds!.includes(j.id))
-          : []
-        
-        console.log('NotificationsPage: Recruiter jobs:', myJobs.length)
-        const allSentNotifications: any[] = []
-        
-        if (myJobs.length === 0) {
-          // Recruiter has no jobs assigned
-          setSentNotifications([])
+        if ('notifications' in notificationsResult) {
+          console.log('✅ Successfully fetched notifications:', notificationsResult.notifications.length, 'notifications')
+          setNotifications(notificationsResult.notifications)
+        } else if ('error' in notificationsResult) {
+          console.log('❌ Notifications API returned error:', notificationsResult.error)
         } else {
-          myJobs.forEach(job => {
-            const applications = getApplicationsForJob(job.id)
-            const notifiedApps = applications.filter(app => app.notified && (app.status === 'selected' || app.status === 'accepted' || app.status === 'rejected'))
-            
-            notifiedApps.forEach(app => {
-              allSentNotifications.push({
-                id: app.id,
-                applicantName: app.applicantName,
-                applicantEmail: app.applicantEmail,
-                jobTitle: job.title,
-                company: job.company,
-                notifiedAt: app.selectedAt || app.acceptedAt || app.rejectedAt || app.submittedAt,
-                status: app.status
-              })
-            })
-          })
-          
-          setSentNotifications(allSentNotifications)
+          console.log('❓ Unexpected notifications API response:', notificationsResult)
         }
+        
+        // Load jobs from backend
+        console.log('💼 Fetching jobs for notifications context...')
+        const jobsResult = await getJobs()
+        console.log('📡 Jobs API response:', jobsResult)
+        
+        if ('jobs' in jobsResult) {
+          console.log('✅ Successfully fetched jobs for notifications:', jobsResult.jobs.length, 'jobs')
+          setJobs(jobsResult.jobs)
+        } else if ('error' in jobsResult) {
+          console.log('❌ Jobs API returned error:', jobsResult.error)
+        } else {
+          console.log('❓ Unexpected jobs API response:', jobsResult)
+        }
+        
+        if (user.role === 'jobseeker') {
+          console.log('👤 Processing jobseeker notifications')
+          // For jobseekers, we already have notifications from backend
+        } else if (user.role === 'recruiter') {
+          console.log('👔 Processing recruiter notifications')
+          // For recruiters, we could load applications they've processed
+          // This would be expanded based on your requirements
+        }
+      } catch (error) {
+        console.error('💥 Failed to load notifications:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          config: error.config
+        })
       }
-      
-      setJobs(allJobs)
-    } catch (error) {
-      console.error('Error loading notifications:', error)
     }
-  }, [user, loading])
+    
+    loadData()
+  }, [mounted, loading, user])
 
   if (loading || !user) {
     return (
@@ -93,8 +88,8 @@ export function NotificationsPage() {
   }
 
 
-  // Applicant view
-  if (user.role === 'applicant') {
+  // JobSeeker view
+  if (user.role === 'jobseeker') {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <motion.div
@@ -360,7 +355,7 @@ export function NotificationsPage() {
       <div className="glass-card p-12 text-center max-w-lg w-full">
         <AlertCircle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-white mb-3">Notifications Not Available</h2>
-        <p className="text-gray-400">Notifications are available for applicants and recruiters only.</p>
+        <p className="text-gray-400">Notifications are available for jobseekers and recruiters only.</p>
       </div>
     </div>
   )
