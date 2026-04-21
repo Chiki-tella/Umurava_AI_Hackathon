@@ -1,9 +1,12 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
-import applicantRoutes from "./routes/applicant.routes";
+
+import authRoutes from "./routes/auth.routes";
 import jobRoutes from "./routes/job.routes";
-import screeningRoutes from "./routes/screening.routes";
+import applicationRoutes from "./routes/application.routes";
+import notificationRoutes from "./routes/notification.routes";
+
 import { globalErrorHandler, notFoundHandler } from "./middleware/error.middleware";
 
 dotenv.config();
@@ -13,9 +16,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
-app.use("/api/applicants", applicantRoutes);
-app.use("/api", screeningRoutes);
+app.use("/api/applications", applicationRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(notFoundHandler);
 app.use(globalErrorHandler);

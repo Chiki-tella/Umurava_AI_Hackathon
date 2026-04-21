@@ -1,9 +1,19 @@
 import { Router } from "express";
-import { createJobController } from "../controllers/job.controller";
-import { asyncHandler } from "../utils/asyncHandler";
+import { createJob, getRecruiterJobs, getJobs, getJobById, getRecommendedJobs } from "../controllers/job.controller";
+import { authMiddleware } from "../middleware/auth.middleware";
+import { roleMiddleware } from "../middleware/role.middleware";
 
 const router = Router();
 
-router.post("/", asyncHandler(createJobController));
+// Recruiter routes
+router.post("/", authMiddleware, roleMiddleware(["recruiter"]), createJob);
+router.get("/recruiter", authMiddleware, roleMiddleware(["recruiter"]), getRecruiterJobs);
+
+// JobSeeker routes
+router.get("/recommended", authMiddleware, roleMiddleware(["jobseeker"]), getRecommendedJobs);
+
+// Public / General routes
+router.get("/", getJobs);
+router.get("/:id", getJobById);
 
 export default router;
