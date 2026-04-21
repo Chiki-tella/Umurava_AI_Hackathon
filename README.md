@@ -4,6 +4,16 @@ TalentAI is a full-stack web application that automates candidate screening usin
 
 ---
 
+## Authors
+
+**Developed by:**
+- **Munezero Impano Christella**
+- **Ahimbazwe Mpuhwe Divine Nikita**
+
+This project was developed as part of the Umurava AI Hackathon, showcasing innovative AI-powered recruitment solutions.
+
+---
+
 ## How It Works
 
 **For Recruiters**
@@ -34,7 +44,7 @@ TalentAI is a full-stack web application that automates candidate screening usin
 │       ├── routes/           # Express routers
 │       └── utils/            # Helpers, validation (Zod), file parsers
 │
-├── AI-Screening-Trainer/     # Main Next.js frontend (production app)
+├── AI-Screening-Frontend/     # Main Next.js frontend (production app)
 │   ├── app/                  # Next.js App Router pages
 │   │   ├── auth/             # Sign in / Sign up
 │   │   ├── dashboard/        # Recruiter dashboard (protected)
@@ -45,7 +55,6 @@ TalentAI is a full-stack web application that automates candidate screening usin
 │   ├── hooks/                # useAuth hook
 │   └── lib/                  # Auth logic, application store, mock data
 │
-└── ai-screening-frontend/    # Earlier prototype frontend (reference only)
 ```
 
 ---
@@ -88,7 +97,7 @@ npm run dev
 ### Frontend
 
 ```bash
-cd AI-Screening-Trainer
+cd AI-Screening-Frontend
 npm install
 npm run dev
 ```
