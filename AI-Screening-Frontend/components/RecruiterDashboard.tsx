@@ -8,11 +8,10 @@ import {
   BarChart3, CheckCircle2, XCircle, Clock, Briefcase,
   Mail, Send, UserCheck
 } from 'lucide-react'
-import { getAllJobs } from '@/lib/jobs'
-import { getApplicationsForJob, scoreApplication, saveScreeningResults, selectCandidate, notifySelectedCandidate, acceptCandidate, rejectCandidate, deleteApplication, type Application } from '@/lib/applications'
+import { getRecruiterJobs, createJob } from '@/lib/jobs-backend'
+import { useAuthContextNew } from '@/components/AuthProviderNew'
 import { clsx } from 'clsx'
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts'
-import { useAuthContextNew } from '@/components/AuthProviderNew'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -324,33 +323,50 @@ export function RecruiterDashboard() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [screeningProgress, setScreeningProgress] = useState(0)
 
-  const [allJobs, setAllJobs] = useState(() => getAllJobs())
+  const [allJobs, setAllJobs] = useState<any[]>([])
+  const [loadingJobs, setLoadingJobs] = useState(true)
 
-  // Auth guard
+  // Load recruiter's jobs from backend
   useEffect(() => {
     if (authLoading) return
     if (!user) { router.replace('/auth'); return }
     if (user.role !== 'recruiter') { router.replace('/'); return }
-    setAllJobs(getAllJobs())
+    
+    const fetchJobs = async () => {
+      try {
+        const result = await getRecruiterJobs()
+        if ('jobs' in result) {
+          setAllJobs(result.jobs)
+        }
+      } catch (error) {
+        console.error('Failed to fetch jobs:', error)
+      } finally {
+        setLoadingJobs(false)
+      }
+    }
+    
+    fetchJobs()
   }, [user, authLoading, router])
 
-  // Recruiter's jobs — only jobs they own
-  const myJobs = allJobs.filter((j) => user?.jobIds?.includes(j.id))
+  // Recruiter's jobs from backend
+  const myJobs = allJobs
 
   useEffect(() => {
     if (myJobs.length > 0 && !selectedJobId) {
-      setSelectedJobId(myJobs[0].id)
+      setSelectedJobId(myJobs[0]._id)
     }
   }, [myJobs, selectedJobId])
 
   useEffect(() => {
     if (selectedJobId) {
-      setApplications(getApplicationsForJob(selectedJobId))
+      // TODO: Replace with backend application fetching
+      // setApplications(getApplicationsForJob(selectedJobId))
+      setApplications([])
       setShowResults(false)
     }
   }, [selectedJobId])
 
-  const selectedJob = allJobs.find((j) => j.id === selectedJobId)
+  const selectedJob = allJobs.find((j) => j._id === selectedJobId)
 
   const handleScreening = async () => {
     if (!selectedJob) return
@@ -468,16 +484,24 @@ export function RecruiterDashboard() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-10">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="p-2.5 rounded-2xl bg-gradient-to-br from-brand-purple to-brand-violet shadow-glow-purple">
-            <Brain className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-br from-brand-purple to-brand-violet shadow-glow-purple">
+              <Brain className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-white">AI Screening Dashboard</h1>
+              <p className="text-gray-400 mt-0.5">
+                {user.companyName ? `${user.companyName} · ` : ''}Recruiter: {user.fullName}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-4xl font-bold text-white">AI Screening Dashboard</h1>
-            <p className="text-gray-400 mt-0.5">
-              {user.company ? `${user.company} · ` : ''}Recruiter: {user.name}
-            </p>
-          </div>
+          {myJobs.length > 0 && (
+            <Link href="/post-job" className="btn-primary flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              Post New Job
+            </Link>
+          )}
         </div>
       </motion.div>
 
@@ -487,13 +511,19 @@ export function RecruiterDashboard() {
           <div className="w-16 h-16 rounded-3xl bg-brand-purple/10 border border-brand-purple/20 flex items-center justify-center mx-auto mb-5">
             <Briefcase className="w-8 h-8 text-brand-violet" />
           </div>
-          <h3 className="text-2xl font-bold text-white mb-2">No Jobs Assigned</h3>
+          <h3 className="text-2xl font-bold text-white mb-2">No Jobs Posted Yet</h3>
           <p className="text-gray-400 max-w-sm mx-auto mb-6">
-            Your account doesn&apos;t have any job postings yet. Use a demo recruiter account to see the full experience.
+            Start by posting your first job to begin receiving applications from qualified candidates.
           </p>
-          <Link href="/auth" className="btn-secondary inline-flex items-center gap-2">
-            Switch Account
-          </Link>
+          <div className="flex items-center justify-center gap-4">
+            <Link href="/post-job" className="btn-primary inline-flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              Post Your First Job
+            </Link>
+            <Link href="/auth" className="btn-secondary inline-flex items-center gap-2">
+              Switch Account
+            </Link>
+          </div>
         </div>
       )}
 
