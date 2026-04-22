@@ -43,10 +43,10 @@ export function JobsPage() {
         }
       } catch (error) {
         console.error('💥 Failed to fetch jobs:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-          config: error.config
+          message: error instanceof Error ? error.message : 'Unknown error',
+          response: error && typeof error === 'object' && 'response' in error ? (error as any).response?.data : undefined,
+          status: error && typeof error === 'object' && 'response' in error ? (error as any).response?.status : undefined,
+          config: error && typeof error === 'object' && 'config' in error ? (error as any).config : undefined
         })
       } finally {
         setLoadingJobs(false)
@@ -68,19 +68,19 @@ export function JobsPage() {
   const closedJobs = allJobs.filter((j) => j.status === 'closed')
 
   const hasPrefs =
-    (user.preferredRoles && user.preferredRoles.length > 0) ||
+    (user.interestedRoles && user.interestedRoles.length > 0) ||
     (user.preferredLocations && user.preferredLocations.length > 0) ||
     (user.skills && user.skills.length > 0)
 
   const matchedJobs = hasPrefs
     ? openJobs.filter((j) => {
-        const roleMatch = !user.preferredRoles?.length ||
-          user.preferredRoles.some((r) => j.title.toLowerCase().includes(r.toLowerCase()))
+        const roleMatch = !user.interestedRoles?.length ||
+          user.interestedRoles.some((r) => j.title.toLowerCase().includes(r.toLowerCase()))
         const locationMatch = !user.preferredLocations?.length ||
           user.preferredLocations.some((l) => j.location?.toLowerCase().includes(l.toLowerCase()))
         const skillMatch = !user.skills?.length ||
           user.skills.some((s) =>
-            j.requiredSkills.some((r) =>
+            j.requiredSkills.some((r: string) =>
               r.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(r.toLowerCase())
             )
           )
@@ -102,7 +102,7 @@ export function JobsPage() {
             <div>
               <div className="flex items-center gap-2 text-brand-violet text-sm font-medium mb-3">
                 <Sparkles className="w-4 h-4" />
-                Welcome back, {user.name.split(' ')[0]}
+                Welcome back, {user.fullName.split(' ')[0]}
               </div>
               <h1 className="text-4xl font-bold text-white mb-2">Your Job Feed</h1>
               <p className="text-gray-400">

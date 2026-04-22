@@ -6,6 +6,12 @@ export interface Job {
   description: string
   requiredSkills: string[]
   location: string
+  companyName: string
+  companyWebsite?: string
+  salary?: string
+  employmentType: 'full-time' | 'part-time' | 'contract' | 'internship' | 'remote'
+  experience?: string
+  education?: string
   createdBy: string
   status: 'open' | 'closed'
   createdAt: string
@@ -47,6 +53,10 @@ export async function createJob(data: {
   description: string
   requiredSkills: string[]
   location: string
+  companyName: string
+  companyWebsite?: string
+  salary?: string
+  employmentType: 'full-time' | 'part-time' | 'contract' | 'internship' | 'remote'
 }): Promise<{ job: Job } | { error: string }> {
   try {
     const response = await jobAPI.createJob(data)

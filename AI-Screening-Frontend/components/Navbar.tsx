@@ -54,8 +54,8 @@ export function Navbar() {
           {/* Center nav — only show relevant links */}
           {user && (
             <div className="hidden md:flex items-center gap-1 bg-dark-800/50 backdrop-blur-sm border border-white/5 rounded-2xl p-1">
-              {/* Applicants see Jobs */}
-              {user.role === 'applicant' && (
+              {/* Job seekers see Jobs */}
+              {user.role === 'jobseeker' && (
                 <>
                   <Link
                     href="/jobs"

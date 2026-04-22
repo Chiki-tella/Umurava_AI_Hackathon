@@ -5,7 +5,7 @@ export interface IUser extends Document {
     fullName: string;
     email: string;
     password?: string;
-    role: "jobseeker" | "recruiter";
+    role: "jobseeker" | "recruiter" | "admin";
     createdAt: Date;
 }
 
@@ -14,7 +14,7 @@ const userSchema = new Schema<IUser>(
         fullName: { type: String, required: true, trim: true },
         email: { type: String, required: true, unique: true, trim: true, lowercase: true },
         password: { type: String, required: true },
-        role: { type: String, enum: ["jobseeker", "recruiter"], required: true },
+        role: { type: String, enum: ["jobseeker", "recruiter", "admin"], required: true },
         createdAt: { type: Date, default: Date.now },
     },
     { discriminatorKey: "role", timestamps: true }
@@ -41,3 +41,11 @@ const recruiterSchema = new Schema<IRecruiter>({
     companyName: { type: String, required: true },
 });
 export const Recruiter = User.discriminator<IRecruiter>("recruiter", recruiterSchema);
+
+export interface IAdmin extends IUser {
+    // Admin users don't need additional fields for now
+}
+const adminSchema = new Schema<IAdmin>({
+    // Add admin-specific fields if needed in the future
+});
+export const Admin = User.discriminator<IAdmin>("admin", adminSchema);

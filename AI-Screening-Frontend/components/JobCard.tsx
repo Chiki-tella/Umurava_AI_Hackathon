@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { MapPin, Clock, ArrowRight, DollarSign, Globe } from 'lucide-react'
+import { MapPin, Clock, ArrowRight, DollarSign, Globe, Building } from 'lucide-react'
 import { Job } from '@/lib/jobs-backend'
 import { clsx } from 'clsx'
 
@@ -22,8 +22,8 @@ const companyColors: Record<string, string> = {
 }
 
 export function JobCard({ job, index, highlighted }: JobCardProps) {
-  // For backend jobs, we don't have company info, so use a default
-  const companyName = 'Company' // This would need to be populated from job creator info
+  // Use company name from backend job data
+  const companyName = job.companyName || 'Company'
   const gradient = companyColors[companyName] || 'from-brand-purple to-brand-violet'
   const initials = companyName.split(' ').map((w) => w[0]).join('').slice(0, 2)
 
@@ -67,20 +67,59 @@ export function JobCard({ job, index, highlighted }: JobCardProps) {
             </span>
           </div>
 
-          {/* Job info */}
+          {/* Company Info - Prominent at top */}
           <div className="relative z-10 flex-1">
-            <h3 className="text-xl font-bold text-white mb-3 group-hover:text-brand-purple transition-colors">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Building className="w-4 h-4 text-brand-violet" />
+                <span className="text-brand-violet font-medium">{job.companyName}</span>
+              </div>
+              {job.companyWebsite && (
+                <a 
+                  href={job.companyWebsite} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-xs text-gray-400 hover:text-brand-violet transition-colors flex items-center gap-1"
+                >
+                  <Globe className="w-3 h-3" />
+                  Website
+                </a>
+              )}
+            </div>
+
+            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-brand-purple transition-colors">
               {job.title}
             </h3>
+
+            {/* Location - Very prominent */}
+            <div className="flex items-center text-gray-300 text-sm font-medium mb-3">
+              <MapPin className="w-4 h-4 mr-1.5 text-brand-violet" />
+              {job.location}
+            </div>
             
-            <p className="text-gray-300 text-sm mb-4 line-clamp-3">
+            <p className="text-gray-300 text-sm mb-4 line-clamp-2">
               {job.description}
             </p>
+
+            {/* Salary and Employment Type */}
+            <div className="flex items-center justify-between mb-4">
+              {job.salary && (
+                <div className="flex items-center text-gray-400 text-sm">
+                  <DollarSign className="w-4 h-4 mr-1.5" />
+                  {job.salary}
+                </div>
+              )}
+              <div className="flex items-center text-gray-400 text-sm">
+                <span className="px-2 py-1 bg-dark-700/50 border border-white/10 rounded-lg text-xs text-gray-300 capitalize">
+                  {job.employmentType}
+                </span>
+              </div>
+            </div>
 
             {/* Skills */}
             <div className="flex flex-wrap gap-2 mb-4">
               {job.requiredSkills.slice(0, 3).map((skill, idx) => (
-                <span key={idx} className="px-2 py-1 bg-brand-purple/10 text-brand-purple text-xs rounded-full border border-brand-purple/20">
+                <span key={skill} className="px-2 py-1 bg-dark-700/50 border border-white/10 rounded-lg text-xs text-gray-300">
                   {skill}
                 </span>
               ))}
@@ -89,12 +128,6 @@ export function JobCard({ job, index, highlighted }: JobCardProps) {
                   +{job.requiredSkills.length - 3} more
                 </span>
               )}
-            </div>
-
-            {/* Location */}
-            <div className="flex items-center text-gray-400 text-sm mb-4">
-              <MapPin className="w-4 h-4 mr-1.5" />
-              {job.location}
             </div>
 
             {/* Bottom row */}

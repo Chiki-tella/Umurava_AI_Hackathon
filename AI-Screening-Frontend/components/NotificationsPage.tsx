@@ -68,10 +68,10 @@ export function NotificationsPage() {
         }
       } catch (error) {
         console.error('💥 Failed to load notifications:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-          config: error.config
+          message: error instanceof Error ? error.message : String(error),
+          response: (error as any)?.response?.data,
+          status: (error as any)?.response?.status,
+          config: (error as any)?.config
         })
       }
     }

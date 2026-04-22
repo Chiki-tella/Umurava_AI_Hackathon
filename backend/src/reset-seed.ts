@@ -1,13 +1,17 @@
 import dotenv from 'dotenv';
 import { connectDatabase } from './config/db';
-import {Job} from './models/job.model';
-import {User} from './models/user.model';
+import { Job } from './models/job.model';
+import { User } from './models/user.model';
 
 dotenv.config();
 
-const seedJobs = async () => {
+const resetAndSeed = async () => {
   try {
     await connectDatabase();
+    
+    // Delete all existing jobs
+    await Job.deleteMany({});
+    console.log('🗑️ Deleted all existing jobs');
     
     // Create admin account if it doesn't exist
     let admin = await User.findOne({ role: 'admin' });
@@ -20,15 +24,6 @@ const seedJobs = async () => {
       });
       await admin.save();
       console.log('✅ Created admin account: admin@talentai.com / admin123');
-    } else {
-      console.log('✅ Admin account already exists');
-    }
-    
-    // Check if we already have jobs
-    const existingJobs = await Job.countDocuments();
-    if (existingJobs > 0) {
-      console.log(`Database already has ${existingJobs} jobs`);
-      return;
     }
 
     // Find a recruiter user or create one
@@ -44,7 +39,7 @@ const seedJobs = async () => {
       await recruiter.save();
     }
 
-    // Create sample jobs
+    // Create sample jobs with rich data
     const sampleJobs = [
       {
         title: 'Senior Frontend Developer',
@@ -55,6 +50,8 @@ const seedJobs = async () => {
         companyWebsite: 'https://techcorp.com',
         salary: '$120,000 - $160,000',
         employmentType: 'remote',
+        experience: '5+ years of frontend development experience with React and TypeScript',
+        education: 'Bachelor\'s degree in Computer Science or related field',
         createdBy: recruiter._id,
         status: 'open'
       },
@@ -67,6 +64,8 @@ const seedJobs = async () => {
         companyWebsite: 'https://techcorp.com',
         salary: '$130,000 - $170,000',
         employmentType: 'full-time',
+        experience: '4+ years of backend development experience',
+        education: 'Bachelor\'s degree in Computer Science or Engineering',
         createdBy: recruiter._id,
         status: 'open'
       },
@@ -79,6 +78,8 @@ const seedJobs = async () => {
         companyWebsite: 'https://techcorp.com',
         salary: '$140,000 - $180,000',
         employmentType: 'full-time',
+        experience: '3+ years of full stack development experience',
+        education: 'Bachelor\'s degree in Computer Science or related field',
         createdBy: recruiter._id,
         status: 'open'
       },
@@ -91,6 +92,8 @@ const seedJobs = async () => {
         companyWebsite: 'https://designhub.io',
         salary: '$90,000 - $120,000',
         employmentType: 'remote',
+        experience: '3+ years of product design experience',
+        education: 'Bachelor\'s degree in Design, HCI, or related field',
         createdBy: recruiter._id,
         status: 'open'
       },
@@ -103,19 +106,21 @@ const seedJobs = async () => {
         companyWebsite: 'https://cloudtech.com',
         salary: '$125,000 - $165,000',
         employmentType: 'full-time',
+        experience: '4+ years of DevOps experience',
+        education: 'Bachelor\'s degree in Computer Science or Information Technology',
         createdBy: recruiter._id,
         status: 'open'
       }
     ];
 
     await Job.insertMany(sampleJobs);
-    console.log(`Successfully created ${sampleJobs.length} sample jobs`);
+    console.log(`✅ Successfully created ${sampleJobs.length} sample jobs with rich data`);
     
   } catch (error) {
-    console.error('Error seeding jobs:', error);
+    console.error('Error in reset and seed:', error);
   } finally {
     process.exit(0);
   }
 };
 
-seedJobs();
+resetAndSeed();
