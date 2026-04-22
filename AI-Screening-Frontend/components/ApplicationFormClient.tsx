@@ -43,7 +43,7 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
     if (!user) { router.replace('/auth'); return }
     if (user.role === 'recruiter') { router.replace('/dashboard'); return }
     // Pre-fill from profile
-    const nameParts = user.name.split(' ')
+    const nameParts = (user.fullName || user.name || '').split(' ')
     setFormData((f) => ({
       ...f,
       firstName: nameParts[0] || '',
@@ -51,8 +51,8 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
       email: user.email,
       skills: user.skills?.join(', ') || '',
     }))
-    setAlreadyApplied(hasApplied(user.id, job.id))
-  }, [user, loading, job.id, router])
+    // setAlreadyApplied(hasApplied(user.id, job._id || job.id)) // TODO: Implement duplicate check
+  }, [user, loading, job._id || job.id, router])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -100,22 +100,36 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
     setIsSubmitting(true)
     await new Promise((r) => setTimeout(r, 1500))
 
-    submitApplication({
-      jobId: job.id,
-      applicantId: user.id,
-      applicantName: `${formData.firstName} ${formData.lastName}`.trim(),
-      applicantEmail: formData.email,
-      skills: formData.skills.split(',').map((s) => s.trim()).filter(Boolean),
-      experience: formData.experience,
-      education: formData.education,
-      portfolio: formData.portfolio || undefined,
-      resumeFileName: resumeFileName,
-      resumeFile: resumeFile,
-    })
+    try {
+      console.log('🚀 Submitting application for job:', job._id || job.id)
+      const result = await applyToJob({
+        jobId: job._id || job.id,
+        cvUrl: resumeFileName || undefined
+      })
+      
+      console.log('📊 Application result:', result)
+      
+      if ('application' in result) {
+        console.log('✅ Application submitted successfully!')
+        setSubmitted(true)
+      } else if ('error' in result) {
+        console.error('❌ Application failed:', result.error)
+        if (result.error.includes('already applied')) {
+          setAlreadyApplied(true)
+        } else {
+          alert(`Application failed: ${result.error}`)
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Application error:', error)
+      alert(`Application failed: ${error.message || 'Unknown error'}`)
+    } finally {
+      setIsSubmitting(false)
+    }
 
-    setIsSubmitting(false)
-    setSubmitted(true)
-    setTimeout(() => router.push('/'), 3500)
+    if (submitted) {
+      setTimeout(() => router.push('/'), 3500)
+    }
   }
 
   if (loading || !user) {

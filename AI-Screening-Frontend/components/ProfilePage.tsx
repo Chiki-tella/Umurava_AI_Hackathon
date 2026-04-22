@@ -25,6 +25,8 @@ export function ProfilePage() {
   const [prefRoles, setPrefRoles] = useState<string[]>([])
   const [prefLocations, setPrefLocations] = useState<string[]>([])
   const [skills, setSkills] = useState('')
+  const [jobs, setJobs] = useState<any[]>([])
+  const [myApplications, setMyApplications] = useState<any[]>([])
 
   useEffect(() => {
     if (loading) return
@@ -32,6 +34,40 @@ export function ProfilePage() {
     setPrefRoles(user.preferredRoles ?? [])
     setPrefLocations(user.preferredLocations ?? [])
     setSkills(user.skills?.join(', ') ?? '')
+    
+    // Fetch jobs for application display
+    const fetchJobs = async () => {
+      try {
+        const result = await getJobs()
+        if ('jobs' in result) {
+          setJobs(result.jobs)
+        }
+      } catch (error) {
+        console.error('Failed to fetch jobs:', error)
+      }
+    }
+    
+    // Fetch user's applications
+    const fetchApplications = async () => {
+      if (user.role === 'jobseeker') {
+        try {
+          console.log('🔍 Fetching applications for user:', user.email, 'Role:', user.role)
+          const result = await getMyApplications()
+          console.log('📊 Applications result:', result)
+          if ('applications' in result) {
+            console.log('✅ Found applications:', result.applications.length)
+            setMyApplications(result.applications)
+          } else if ('error' in result) {
+            console.error('❌ API Error:', result.error)
+          }
+        } catch (error) {
+          console.error('❌ Failed to fetch applications:', error)
+        }
+      }
+    }
+    
+    fetchJobs()
+    fetchApplications()
   }, [user, loading, router])
 
   if (loading || !user) {
@@ -47,7 +83,7 @@ export function ProfilePage() {
   }
 
   const handleSave = () => {
-    updateUser({
+    updateUserProfile({
       preferredRoles: prefRoles,
       preferredLocations: prefLocations,
       skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
@@ -56,10 +92,6 @@ export function ProfilePage() {
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
   }
-
-  const myApplications = user.role === 'applicant'
-    ? getApplicationsByApplicant(user.id)
-    : []
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -70,10 +102,10 @@ export function ProfilePage() {
         <div className="glass-card p-6 mb-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-purple to-brand-pink flex items-center justify-center text-white text-2xl font-bold">
-              {user.name.charAt(0)}
+              {user.fullName?.charAt(0) || 'U'}
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-white">{user.name}</h2>
+              <h2 className="text-xl font-semibold text-white">{user.fullName || 'Unknown User'}</h2>
               <div className="flex items-center gap-2 text-gray-400 text-sm mt-0.5">
                 <Mail className="w-3.5 h-3.5" />{user.email}
               </div>
@@ -84,14 +116,14 @@ export function ProfilePage() {
                   : 'bg-brand-purple/10 text-brand-violet border-brand-purple/20'
               )}>
                 {user.role === 'recruiter' ? <Building2 className="w-3 h-3" /> : <User className="w-3 h-3" />}
-                {user.role === 'recruiter' ? `Recruiter · ${user.company}` : 'Job Seeker'}
+                {user.role === 'recruiter' ? `Recruiter · ${user.companyName || 'Company'}` : 'Job Seeker'}
               </span>
             </div>
           </div>
         </div>
 
         {/* Applicant preferences */}
-        {user.role === 'applicant' && (
+        {user.role === 'jobseeker' && (
           <div className="glass-card p-6 mb-6 space-y-6">
             <h3 className="text-lg font-semibold text-white">Job Preferences</h3>
 
@@ -145,7 +177,7 @@ export function ProfilePage() {
         )}
 
         {/* Applications history */}
-        {user.role === 'applicant' && (
+        {user.role === 'jobseeker' && (
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-white mb-5">My Applications ({myApplications.length})</h3>
             {myApplications.length === 0 ? (
@@ -153,20 +185,38 @@ export function ProfilePage() {
             ) : (
               <div className="space-y-3">
                 {myApplications.map((app) => {
-                  const job = jobs.find((j) => j.id === app.jobId)
+                  const job = app.jobDetails || jobs.find((j) => j._id === app.jobId)
                   return (
-                    <div key={app.id} className="flex items-center justify-between p-4 rounded-xl bg-dark-700/50 border border-white/5">
+                    <div key={app._id} className="flex items-center justify-between p-4 rounded-xl bg-dark-700/50 border border-white/5">
                       <div>
                         <p className="text-sm font-medium text-white">{job?.title ?? 'Unknown Job'}</p>
-                        <p className="text-xs text-gray-500">{job?.company} · Applied {new Date(app.submittedAt).toLocaleDateString()}</p>
+                        <p className="text-xs text-gray-500">{job?.location ?? 'Remote'} · Applied {new Date(app.createdAt).toLocaleDateString()}</p>
+                        {app.aiSummary && (
+                          <p className="text-xs text-gray-400 mt-1">{app.aiSummary}</p>
+                        )}
                       </div>
-                      {app.matchScore ? (
-                        <span className={clsx('badge', app.matchScore >= 90 ? 'badge-success' : app.matchScore >= 75 ? 'badge-warning' : 'badge-danger')}>
-                          {app.matchScore}% match
+                      <div className="flex flex-col items-end gap-2">
+                        <span className={clsx(
+                          'badge text-xs',
+                          app.status === 'selected' ? 'badge-success' :
+                          app.status === 'rejected' ? 'badge-danger' :
+                          'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                        )}>
+                          {app.status === 'selected' ? 'Selected' :
+                           app.status === 'rejected' ? 'Rejected' :
+                           'Pending Review'}
                         </span>
-                      ) : (
-                        <span className="badge bg-gray-500/10 text-gray-400 border border-gray-500/20">Pending review</span>
-                      )}
+                        {app.score !== undefined && (
+                          <span className={clsx(
+                            'badge text-xs',
+                            app.score >= 90 ? 'badge-success' : 
+                            app.score >= 75 ? 'badge-warning' : 
+                            'badge-danger'
+                          )}>
+                            {app.score}% match
+                          </span>
+                        )}
+                      </div>
                     </div>
                   )
                 })}

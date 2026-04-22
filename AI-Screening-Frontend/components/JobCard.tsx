@@ -75,15 +75,17 @@ export function JobCard({ job, index, highlighted }: JobCardProps) {
                 <span className="text-brand-violet font-medium">{job.companyName}</span>
               </div>
               {job.companyWebsite && (
-                <a 
-                  href={job.companyWebsite} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-xs text-gray-400 hover:text-brand-violet transition-colors flex items-center gap-1"
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    window.open(job.companyWebsite, '_blank', 'noopener,noreferrer')
+                  }}
+                  className="text-xs text-gray-400 hover:text-brand-violet transition-colors flex items-center gap-1 bg-transparent border-none cursor-pointer"
                 >
                   <Globe className="w-3 h-3" />
                   Website
-                </a>
+                </button>
               )}
             </div>
 

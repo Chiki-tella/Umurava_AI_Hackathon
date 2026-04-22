@@ -9,6 +9,7 @@ import {
   Mail, Send, UserCheck
 } from 'lucide-react'
 import { getRecruiterJobs, createJob } from '@/lib/jobs-backend'
+import { getJobApplications, screenApplicants, selectCandidate } from '@/lib/applications-backend'
 import { useAuthContextNew } from '@/components/AuthProviderNew'
 import { clsx } from 'clsx'
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts'
@@ -27,27 +28,42 @@ function getScoreConfig(score: number) {
   return { color: 'text-red-400', bg: 'bg-red-500', badge: 'badge-danger', label: 'Below Average' }
 }
 
-function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSelect, onNotify, onAccept, onReject, onDelete }: {
-  app: Application
-  index: number
-  isExpanded: boolean
-  onToggle: () => void
+function ApplicationCard({
+  app,
+  requiredSkills,
+  rank,
+  index,
+  onSelect,
+  onNotify,
+  onAccept,
+  onReject,
+  onDelete,
+  onToggle,
+  isExpanded,
+  showResults,
+}: {
+  app: any // Backend application structure
   requiredSkills: string[]
+  rank: number
+  index: number
   onSelect: (id: string) => void
   onNotify: (id: string) => void
   onAccept: (id: string) => void
   onReject: (id: string) => void
   onDelete: (id: string) => void
+  onToggle: () => void
+  isExpanded: boolean
+  showResults: boolean
 }) {
-  const score = getScoreConfig(app.matchScore ?? 0)
-  const medal = MEDAL_COLORS[index]
+  const score = getScoreConfig(app.score ?? 0)
+  const medal = MEDAL_COLORS[rank]
 
   const radarData = [
-    { subject: 'Skills', value: Math.min(100, (app.matchScore ?? 0)) },
-    { subject: 'Experience', value: Math.min(100, (app.matchScore ?? 0) - 5 + (app.experience.length > 200 ? 8 : 0)) },
-    { subject: 'Education', value: Math.min(100, (app.matchScore ?? 0) - 8 + (app.education.length > 20 ? 10 : 0)) },
-    { subject: 'Culture Fit', value: Math.min(100, (app.matchScore ?? 0) + 3) },
-    { subject: 'Potential', value: Math.min(100, (app.matchScore ?? 0) - 2) },
+    { subject: 'Skills', value: Math.min(100, (app.score ?? 0)) },
+    { subject: 'Experience', value: Math.min(100, (app.score ?? 0) - 5 + (app.applicantDetails?.experience?.length > 200 ? 8 : 0)) },
+    { subject: 'Education', value: Math.min(100, (app.score ?? 0) - 8 + (app.applicantDetails?.education?.length > 20 ? 10 : 0)) },
+    { subject: 'Culture Fit', value: Math.min(100, (app.score ?? 0) + 3) },
+    { subject: 'Potential', value: Math.min(100, (app.score ?? 0) - 2) },
   ].map(d => ({ ...d, value: Math.max(0, Math.round(d.value)) }))
 
   return (
@@ -81,15 +97,15 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSel
 
           {/* Avatar */}
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-purple to-brand-pink flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-            {app.applicantName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+            {app.applicantDetails?.fullName?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'}
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4 mb-1">
               <div>
-                <h3 className="text-lg font-semibold text-white">{app.applicantName}</h3>
-                <p className="text-sm text-gray-400">{app.applicantEmail}</p>
+                <h3 className="text-lg font-semibold text-white">{app.applicantDetails?.fullName || 'Unknown'}</h3>
+                <p className="text-sm text-gray-400">{app.applicantDetails?.email || 'No email'}</p>
               </div>
               <span className={clsx('badge flex-shrink-0', score.badge)}>{score.label}</span>
             </div>
@@ -97,12 +113,12 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSel
             <div className="mt-3">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs text-gray-500">AI Match Score</span>
-                <span className={clsx('text-2xl font-bold', score.color)}>{app.matchScore}%</span>
+                <span className={clsx('text-2xl font-bold', score.color)}>{app.score || 0}%</span>
               </div>
               <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${app.matchScore}%` }}
+                  animate={{ width: `${app.score || 0}%` }}
                   transition={{ duration: 1, delay: index * 0.06 + 0.3, ease: 'easeOut' }}
                   className={clsx('h-full rounded-full', score.bg)}
                 />
@@ -111,46 +127,36 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSel
           </div>
         </div>
 
-        {/* Strengths / Gaps */}
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-xs font-medium text-gray-300">Strengths</span>
-            </div>
-            <ul className="space-y-1">
-              {(app.strengths ?? []).slice(0, 2).map((s, i) => (
-                <li key={i} className="flex items-start gap-1.5 text-xs text-gray-400">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0 mt-0.5" />{s}
-                </li>
-              ))}
-            </ul>
+        {/* Skills */}
+        <div className="mt-5">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Target className="w-3.5 h-3.5 text-brand-purple" />
+            <span className="text-xs font-medium text-gray-300">Skills</span>
           </div>
-          {(app.gaps ?? []).length > 0 && (
-            <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-xs font-medium text-gray-300">Gaps</span>
-              </div>
-              <ul className="space-y-1">
-                {(app.gaps ?? []).slice(0, 2).map((g, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-xs text-gray-400">
-                    <XCircle className="w-3 h-3 text-amber-400 flex-shrink-0 mt-0.5" />{g}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <div className="flex flex-wrap gap-1.5">
+            {(app.applicantDetails?.skills ?? []).slice(0, 6).map((skill: string, i: number) => (
+              <span key={i} className={clsx(
+                'px-2.5 py-1 rounded-lg text-xs border',
+                requiredSkills.map(s => s.toLowerCase()).includes(skill.toLowerCase())
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  : 'bg-brand-purple/10 text-brand-violet border-brand-purple/20'
+              )}>
+                {skill}
+              </span>
+            ))}
+          </div>
         </div>
 
-        {/* AI Recommendation */}
-        <div className={clsx('mt-4 p-3 rounded-xl border text-xs leading-relaxed',
-          score.badge === 'badge-success' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300'
-          : score.badge === 'badge-warning' ? 'bg-amber-500/5 border-amber-500/20 text-amber-300'
-          : 'bg-red-500/5 border-red-500/20 text-red-300'
-        )}>
-          <span className="font-medium">AI: </span>{app.recommendation}
-        </div>
+        {/* AI Summary */}
+        {app.aiSummary && (
+          <div className={clsx('mt-4 p-3 rounded-xl border text-xs leading-relaxed',
+            score.badge === 'badge-success' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300'
+            : score.badge === 'badge-warning' ? 'bg-amber-500/5 border-amber-500/20 text-amber-300'
+            : 'bg-red-500/5 border-red-500/20 text-red-300'
+          )}>
+            <span className="font-medium">AI Analysis: </span>{app.aiSummary}
+          </div>
+        )}
 
         {/* Expand toggle */}
         <button onClick={onToggle} className="mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-sm text-gray-400 hover:text-white transition-all">
@@ -160,9 +166,9 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSel
         {/* Action Buttons */}
         <div className="mt-4 flex flex-wrap items-center gap-3">
           {/* Status-based actions */}
-          {app.status === 'submitted' || app.status === 'screened' ? (
+          {app.status === 'pending' ? (
             <button
-              onClick={() => onSelect(app.id)}
+              onClick={() => onSelect(app._id)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-purple/10 border border-brand-purple/20 hover:bg-brand-purple/20 text-sm text-brand-violet font-medium transition-all"
             >
               <UserCheck className="w-4 h-4" />
@@ -173,53 +179,25 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSel
               <UserCheck className="w-4 h-4 text-emerald-400" />
               <span className="text-sm text-emerald-400 font-medium">Selected</span>
             </div>
-          ) : app.status === 'accepted' ? (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-500/10 border border-green-500/20">
-              <CheckCircle2 className="w-4 h-4 text-green-400" />
-              <span className="text-sm text-green-400 font-medium">Accepted</span>
-            </div>
           ) : app.status === 'rejected' ? (
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
               <XCircle className="w-4 h-4 text-red-400" />
               <span className="text-sm text-red-400 font-medium">Rejected</span>
             </div>
-          ) : app.status === 'deleted' ? (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-500/10 border border-gray-500/20">
-              <AlertCircle className="w-4 h-4 text-gray-400" />
-              <span className="text-sm text-gray-400 font-medium">Deleted</span>
-            </div>
           ) : null}
           
-          {/* Notification button */}
-          {app.status === 'selected' && !app.notified && (
-            <button
-              onClick={() => onNotify(app.id)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-sm text-emerald-400 font-medium transition-all"
-            >
-              <Send className="w-4 h-4" />
-              Send Interview Invite
-            </button>
-          )}
-          
-          {app.notified && app.status !== 'deleted' && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
-              <Mail className="w-4 h-4 text-blue-400" />
-              <span className="text-sm text-blue-400 font-medium">Notified</span>
-            </div>
-          )}
-          
-          {/* Accept/Reject buttons for selected candidates */}
-          {app.status === 'selected' && app.notified && (
+          {/* Accept/Reject buttons for pending candidates */}
+          {app.status === 'pending' && (
             <>
               <button
-                onClick={() => onAccept(app.id)}
+                onClick={() => onAccept(app._id)}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 text-sm text-green-400 font-medium transition-all"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 Accept
               </button>
               <button
-                onClick={() => onReject(app.id)}
+                onClick={() => onReject(app._id)}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-sm text-red-400 font-medium transition-all"
               >
                 <XCircle className="w-4 h-4" />
@@ -228,10 +206,10 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSel
             </>
           )}
           
-          {/* Delete button for non-accepted candidates */}
-          {app.status !== 'accepted' && app.status !== 'deleted' && (
+          {/* Delete button for pending candidates */}
+          {app.status === 'pending' && (
             <button
-              onClick={() => onDelete(app.id)}
+              onClick={() => onDelete(app._id)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-500/10 border border-gray-500/20 hover:bg-gray-500/20 text-sm text-gray-400 font-medium transition-all"
             >
               <AlertCircle className="w-4 h-4" />
@@ -254,10 +232,10 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSel
               <div className="pt-5 mt-5 border-t border-white/5 grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <p className="text-xs font-medium text-gray-400 mb-2">Skills</p>
+                    <p className="text-xs font-medium text-gray-400 mb-2">All Skills</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {app.skills.map((skill) => (
-                        <span key={skill} className={clsx(
+                      {(app.applicantDetails?.skills ?? []).map((skill: string, i: number) => (
+                        <span key={i} className={clsx(
                           'px-2.5 py-1 rounded-lg text-xs border',
                           requiredSkills.map(s => s.toLowerCase()).includes(skill.toLowerCase())
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
@@ -269,26 +247,13 @@ function CandidateCard({ app, index, isExpanded, onToggle, requiredSkills, onSel
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-400 mb-1">Experience</p>
-                    <p className="text-sm text-gray-300 leading-relaxed">{app.experience}</p>
+                    <p className="text-xs font-medium text-gray-400 mb-1">Application Status</p>
+                    <p className="text-sm text-gray-300 capitalize">{app.status}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-400 mb-1">Education</p>
-                    <p className="text-sm text-gray-300">{app.education}</p>
+                    <p className="text-xs font-medium text-gray-400 mb-1">Applied Date</p>
+                    <p className="text-sm text-gray-300">{new Date(app.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                   </div>
-                  {app.portfolio && (
-                    <div>
-                      <p className="text-xs font-medium text-gray-400 mb-1">Portfolio</p>
-                      <a href={app.portfolio} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-violet hover:underline">{app.portfolio}</a>
-                    </div>
-                  )}
-                  {app.resumeFileName && (
-                    <div>
-                      <p className="text-xs font-medium text-gray-400 mb-1">Resume/CV</p>
-                      <p className="text-sm text-gray-300">{app.resumeFileName}</p>
-                    </div>
-                  )}
-                  <p className="text-xs text-gray-600">Applied {new Date(app.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-400 mb-3">AI Assessment Breakdown</p>
@@ -359,9 +324,18 @@ export function RecruiterDashboard() {
 
   useEffect(() => {
     if (selectedJobId) {
-      // TODO: Replace with backend application fetching
-      // setApplications(getApplicationsForJob(selectedJobId))
-      setApplications([])
+      const fetchApplications = async () => {
+        try {
+          const result = await getJobApplications(selectedJobId)
+          if ('applications' in result) {
+            setApplications(result.applications)
+          }
+        } catch (error) {
+          console.error('Failed to fetch applications:', error)
+          setApplications([])
+        }
+      }
+      fetchApplications()
       setShowResults(false)
     }
   }, [selectedJobId])
@@ -381,88 +355,65 @@ export function RecruiterDashboard() {
       })
     }, 200)
 
-    await new Promise((r) => setTimeout(r, 2800))
+    try {
+      const result = await screenApplicants(selectedJobId)
+      if ('applications' in result) {
+        setApplications(result.applications)
+      }
+    } catch (error) {
+      console.error('Failed to screen applicants:', error)
+    }
+
     clearInterval(interval)
     setScreeningProgress(100)
-
-    // Score all applications
-    const results = applications.map((app) => ({
-      id: app.id,
-      ...scoreApplication(app, selectedJob.requiredSkills),
-    }))
-    saveScreeningResults(selectedJobId, results)
-
-    // Reload with scores
-    const scored = getApplicationsForJob(selectedJobId)
-      .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
-    setApplications(scored)
-
     await new Promise((r) => setTimeout(r, 300))
     setIsScreening(false)
     setShowResults(true)
   }
 
-  const handleSelectCandidate = (applicationId: string) => {
-    selectCandidate(applicationId)
-    // Reload applications to update UI
-    const updated = getApplicationsForJob(selectedJobId)
-      .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
-    setApplications(updated)
+  const handleSelectCandidate = async (applicationId: string, status: 'selected' | 'rejected') => {
+    try {
+      const result = await selectCandidate(applicationId, status)
+      if ('application' in result) {
+        // Update the application in the local state
+        setApplications(prev => prev.map(app => 
+          app._id === applicationId ? { ...app, status } : app
+        ))
+        alert(`Candidate ${status} successfully!`)
+      }
+    } catch (error: any) {
+      alert(error.message || 'Failed to update candidate status')
+    }
   }
 
-  const handleNotifyCandidate = (applicationId: string) => {
-    const result = notifySelectedCandidate(applicationId)
-    if (result.success) {
-      alert(result.message)
-      // Reload applications to update UI
-      const updated = getApplicationsForJob(selectedJobId)
-        .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
-      setApplications(updated)
-    } else {
-      alert(result.message)
+  const handleNotifyCandidate = async (applicationId: string) => {
+    try {
+      const result = await selectCandidate(applicationId, 'selected')
+      if ('application' in result) {
+        setApplications(prev => prev.map(app => 
+          app._id === applicationId ? { ...app, status: 'selected', notified: true } : app
+        ))
+        alert('Interview notification sent successfully!')
+      }
+    } catch (error: any) {
+      alert(error.message || 'Failed to send notification')
     }
   }
 
   const handleAcceptCandidate = (applicationId: string) => {
-    const result = acceptCandidate(applicationId)
-    if (result.success) {
-      alert(result.message)
-      // Reload applications to update UI
-      const updated = getApplicationsForJob(selectedJobId)
-        .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
-      setApplications(updated)
-    } else {
-      alert(result.message)
-    }
+    handleSelectCandidate(applicationId, 'selected')
   }
 
   const handleRejectCandidate = (applicationId: string) => {
     if (confirm('Are you sure you want to reject this candidate? They will receive a rejection notification.')) {
-      const result = rejectCandidate(applicationId)
-      if (result.success) {
-        alert(result.message)
-        // Reload applications to update UI
-        const updated = getApplicationsForJob(selectedJobId)
-          .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
-        setApplications(updated)
-      } else {
-        alert(result.message)
-      }
+      handleSelectCandidate(applicationId, 'rejected')
     }
   }
 
   const handleDeleteApplication = (applicationId: string) => {
     if (confirm('Are you sure you want to remove this application? This cannot be undone and no notification will be sent.')) {
-      const result = deleteApplication(applicationId)
-      if (result.success) {
-        alert(result.message)
-        // Reload applications to update UI
-        const updated = getApplicationsForJob(selectedJobId)
-          .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
-        setApplications(updated)
-      } else {
-        alert(result.message)
-      }
+      setApplications(prev => prev.filter(app => app._id !== applicationId))
+      alert('Application removed successfully!')
     }
   }
 
@@ -475,10 +426,10 @@ export function RecruiterDashboard() {
   }
 
   const avgScore = applications.length
-    ? Math.round(applications.reduce((a, c) => a + (c.matchScore ?? 0), 0) / applications.length)
+    ? Math.round(applications.reduce((a, c) => a + (c.score ?? 0), 0) / applications.length)
     : 0
-  const topScore = applications[0]?.matchScore ?? 0
-  const strongCandidates = applications.filter((c) => (c.matchScore ?? 0) >= 90).length
+  const topScore = applications[0]?.score ?? 0
+  const strongCandidates = applications.filter((c) => (c.score ?? 0) >= 90).length
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -540,8 +491,8 @@ export function RecruiterDashboard() {
                   className="input-field max-w-sm"
                 >
                   {myJobs.map((job) => (
-                    <option key={job.id} value={job.id} style={{ background: '#141428' }}>
-                      {job.title} — {job.company}
+                    <option key={job._id} value={job._id} style={{ background: '#141428' }}>
+                      {job.title} — {job.companyName}
                     </option>
                   ))}
                 </select>
@@ -636,12 +587,14 @@ export function RecruiterDashboard() {
 
                 <div className="space-y-4">
                   {applications.map((app, index) => (
-                    <CandidateCard
-                      key={app.id}
+                    <ApplicationCard
+                      key={app._id}
                       app={app}
+                      rank={index}
                       index={index}
-                      isExpanded={expandedId === app.id}
-                      onToggle={() => setExpandedId(expandedId === app.id ? null : app.id)}
+                      isExpanded={expandedId === app._id}
+                      showResults={showResults}
+                      onToggle={() => setExpandedId(expandedId === app._id ? null : app._id)}
                       requiredSkills={selectedJob?.requiredSkills ?? []}
                       onSelect={handleSelectCandidate}
                       onNotify={handleNotifyCandidate}

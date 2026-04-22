@@ -1,61 +1,59 @@
 import dotenv from 'dotenv';
 import { connectDatabase } from './config/db';
 import { Job } from './models/job.model';
-import { User, Recruiter, Admin } from './models/user.model';
+import { User, Recruiter, IRecruiter } from './models/user.model';
 import bcrypt from 'bcrypt';
 
 dotenv.config();
 
-const resetAndSeed = async () => {
+const populateAllAccounts = async () => {
   try {
     await connectDatabase();
     
-    // Delete all existing jobs
-    await Job.deleteMany({});
-    console.log('🗑️ Deleted all existing jobs');
+    console.log('🚀 Starting to populate all test accounts...');
     
-    // Create admin account if it doesn't exist
-    let admin = await Admin.findOne({ email: 'admin@talentai.com' });
-    if (!admin) {
-      const hashedPassword = await bcrypt.hash('admin123', 10);
-      admin = new Admin({
-        email: 'admin@talentai.com',
-        fullName: 'Platform Administrator',
-        password: hashedPassword,
-        role: 'admin'
-      });
-      await admin.save();
-      console.log('✅ Created admin account: admin@talentai.com / admin123');
-    }
-
-    // Create multiple test users for different companies
+    // 1. Create Admin Account
+    console.log('\n📝 Creating Admin Account...');
+    await User.deleteMany({ role: 'admin' });
+    const adminHashedPassword = await bcrypt.hash('admin123', 10);
+    const admin = new User({
+      email: 'admin@talentai.com',
+      fullName: 'Platform Administrator',
+      password: adminHashedPassword,
+      role: 'admin'
+    });
+    await admin.save();
+    console.log('✅ Admin created: admin@talentai.com / admin123');
+    
+    // 2. Create Recruiter Accounts
+    console.log('\n📝 Creating Recruiter Accounts...');
+    await User.deleteMany({ role: 'recruiter' });
+    
     const recruiters = [
       { email: 'techcorp@recruiter.com', fullName: 'TechCorp HR', password: 'recruiter123', companyName: 'TechCorp Solutions' },
       { email: 'designhub@recruiter.com', fullName: 'DesignHub Hiring', password: 'recruiter123', companyName: 'DesignHub' },
       { email: 'cloudtech@recruiter.com', fullName: 'CloudTech Talent', password: 'recruiter123', companyName: 'CloudTech Inc' }
     ];
-
-    const createdRecruiters = [];
+    
+    const createdRecruiters: IRecruiter[] = [];
     for (const recruiterData of recruiters) {
-      let recruiter = await Recruiter.findOne({ email: recruiterData.email });
-      if (!recruiter) {
-        const hashedPassword = await bcrypt.hash(recruiterData.password, 10);
-        recruiter = new Recruiter({
-          email: recruiterData.email,
-          fullName: recruiterData.fullName,
-          password: hashedPassword,
-          role: 'recruiter',
-          companyName: recruiterData.companyName
-        });
-        await recruiter.save();
-        createdRecruiters.push(recruiter);
-        console.log(`✅ Created recruiter: ${recruiterData.email} / ${recruiterData.password}`);
-      } else {
-        createdRecruiters.push(recruiter);
-      }
+      const hashedPassword = await bcrypt.hash(recruiterData.password, 10);
+      const recruiter = new Recruiter({
+        email: recruiterData.email,
+        fullName: recruiterData.fullName,
+        password: hashedPassword,
+        role: 'recruiter',
+        companyName: recruiterData.companyName
+      });
+      await recruiter.save();
+      createdRecruiters.push(recruiter);
+      console.log(`✅ Recruiter created: ${recruiterData.email} / ${recruiterData.password}`);
     }
-
-    // Create job seeker accounts for testing
+    
+    // 3. Create Job Seeker Accounts
+    console.log('\n📝 Creating Job Seeker Accounts...');
+    await User.deleteMany({ role: 'jobseeker' });
+    
     const jobSeekers = [
       { email: 'john.developer@email.com', fullName: 'John Developer', password: 'seeker123' },
       { email: 'sarah.designer@email.com', fullName: 'Sarah Designer', password: 'seeker123' },
@@ -63,32 +61,32 @@ const resetAndSeed = async () => {
       { email: 'emma.fullstack@email.com', fullName: 'Emma Fullstack', password: 'seeker123' },
       { email: 'alex.devops@email.com', fullName: 'Alex DevOps', password: 'seeker123' }
     ];
-
+    
     for (const seekerData of jobSeekers) {
-      let seeker = await User.findOne({ email: seekerData.email });
-      if (!seeker) {
-        const hashedPassword = await bcrypt.hash(seekerData.password, 10);
-        seeker = new User({
-          email: seekerData.email,
-          fullName: seekerData.fullName,
-          password: hashedPassword,
-          role: 'jobseeker'
-        });
-        await seeker.save();
-        console.log(`✅ Created job seeker: ${seekerData.email} / ${seekerData.password}`);
-      }
+      const hashedPassword = await bcrypt.hash(seekerData.password, 10);
+      const seeker = new User({
+        email: seekerData.email,
+        fullName: seekerData.fullName,
+        password: hashedPassword,
+        role: 'jobseeker'
+      });
+      await seeker.save();
+      console.log(`✅ Job seeker created: ${seekerData.email} / ${seekerData.password}`);
     }
-
-    // Create sample jobs assigned to specific company recruiters
+    
+    // 4. Delete existing jobs and create new ones
+    console.log('\n📝 Creating Jobs...');
+    await Job.deleteMany({});
+    
+    // Find specific recruiters for job assignment
     const techCorpRecruiter = createdRecruiters.find(r => r.companyName === 'TechCorp Solutions');
     const designHubRecruiter = createdRecruiters.find(r => r.companyName === 'DesignHub');
     const cloudTechRecruiter = createdRecruiters.find(r => r.companyName === 'CloudTech Inc');
-
-    // Ensure all required recruiters exist
+    
     if (!techCorpRecruiter || !designHubRecruiter || !cloudTechRecruiter) {
       throw new Error('Missing required recruiters for job creation');
     }
-
+    
     const sampleJobs = [
       {
         title: 'Senior Frontend Developer',
@@ -161,15 +159,39 @@ const resetAndSeed = async () => {
         status: 'open'
       }
     ];
-
+    
     await Job.insertMany(sampleJobs);
-    console.log(`✅ Successfully created ${sampleJobs.length} sample jobs with rich data`);
+    console.log(`✅ Created ${sampleJobs.length} jobs`);
+    
+    // 5. Summary
+    console.log('\n🎉 All accounts and jobs created successfully!');
+    console.log('\n📋 Login Credentials:');
+    console.log('\n👑 ADMIN:');
+    console.log('   Email: admin@talentai.com');
+    console.log('   Password: admin123');
+    
+    console.log('\n🏢 RECRUITERS:');
+    console.log('   TechCorp: techcorp@recruiter.com / recruiter123');
+    console.log('   DesignHub: designhub@recruiter.com / recruiter123');
+    console.log('   CloudTech: cloudtech@recruiter.com / recruiter123');
+    
+    console.log('\n👥 JOB SEEKERS:');
+    console.log('   John: john.developer@email.com / seeker123');
+    console.log('   Sarah: sarah.designer@email.com / seeker123');
+    console.log('   Mike: mike.backend@email.com / seeker123');
+    console.log('   Emma: emma.fullstack@email.com / seeker123');
+    console.log('   Alex: alex.devops@email.com / seeker123');
+    
+    console.log('\n📊 Jobs Created:');
+    console.log('   TechCorp: 3 jobs (Frontend, Backend, Full Stack)');
+    console.log('   DesignHub: 1 job (Product Designer)');
+    console.log('   CloudTech: 1 job (DevOps Engineer)');
     
   } catch (error) {
-    console.error('Error in reset and seed:', error);
+    console.error('❌ Error populating accounts:', error);
   } finally {
     process.exit(0);
   }
 };
 
-resetAndSeed();
+populateAllAccounts();

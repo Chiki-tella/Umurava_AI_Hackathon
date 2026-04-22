@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
 import { connectDatabase } from './config/db';
 import {Job} from './models/job.model';
-import {User, Recruiter} from './models/user.model';
+import {User, Recruiter, Admin} from './models/user.model';
+import bcrypt from 'bcrypt';
 
 dotenv.config();
 
@@ -10,12 +11,13 @@ const seedJobs = async () => {
     await connectDatabase();
     
     // Create admin account if it doesn't exist
-    let admin = await User.findOne({ role: 'admin' });
+    let admin = await Admin.findOne({ email: 'admin@talentai.com' });
     if (!admin) {
-      admin = new User({
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      admin = new Admin({
         email: 'admin@talentai.com',
         fullName: 'Platform Administrator',
-        password: 'admin123',
+        password: hashedPassword,
         role: 'admin'
       });
       await admin.save();
@@ -42,10 +44,11 @@ const seedJobs = async () => {
     for (const recruiterData of recruiters) {
       let recruiter = await Recruiter.findOne({ email: recruiterData.email });
       if (!recruiter) {
+        const hashedPassword = await bcrypt.hash(recruiterData.password, 10);
         recruiter = new Recruiter({
           email: recruiterData.email,
           fullName: recruiterData.fullName,
-          password: recruiterData.password,
+          password: hashedPassword,
           role: 'recruiter',
           companyName: recruiterData.companyName
         });
@@ -69,10 +72,11 @@ const seedJobs = async () => {
     for (const seekerData of jobSeekers) {
       let seeker = await User.findOne({ email: seekerData.email });
       if (!seeker) {
+        const hashedPassword = await bcrypt.hash(seekerData.password, 10);
         seeker = new User({
           email: seekerData.email,
           fullName: seekerData.fullName,
-          password: seekerData.password,
+          password: hashedPassword,
           role: 'jobseeker'
         });
         await seeker.save();

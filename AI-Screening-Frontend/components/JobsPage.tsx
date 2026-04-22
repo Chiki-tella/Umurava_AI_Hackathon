@@ -166,7 +166,7 @@ export function JobsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {(showSplit ? otherJobs : openJobs).map((job, index) => (
-                <JobCard key={job.id} job={job} index={index} />
+                <JobCard key={job._id || job.id} job={job} index={index} />
               ))}
             </div>
           )}
