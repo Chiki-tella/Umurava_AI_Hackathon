@@ -158,4 +158,4 @@ Our AI screening engine utilizes **Gemini 1.5 Flash** to perform deep analysis o
 
 ---
 
-*Winner of "Most Innovative AI Solution" - Umurava AI Hackathon 2024 (Placeholder)*
+
