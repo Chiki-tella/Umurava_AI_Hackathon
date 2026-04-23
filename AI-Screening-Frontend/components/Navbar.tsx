@@ -78,7 +78,10 @@ export function Navbar() {
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                     )}
                   >
-                    <Bell className="w-4 h-4" />
+                    <div className="relative">
+                      <Bell className="w-4 h-4" />
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
+                    </div>
                     <span>Notifications</span>
                   </Link>
                 </>
@@ -152,7 +155,10 @@ export function Navbar() {
                         onClick={() => setMenuOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
                       >
-                        <Bell className="w-4 h-4" />
+                        <div className="relative">
+                          <Bell className="w-4 h-4" />
+                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
+                        </div>
                         Notifications
                       </Link>
                     )}

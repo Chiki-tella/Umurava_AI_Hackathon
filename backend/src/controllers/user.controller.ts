@@ -5,6 +5,18 @@ import { updateProfileSchema } from "../validation/user.schema";
 
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        console.log('📝 Profile update request body:', req.body);
+        
+        // Check if request body exists
+        if (!req.body || Object.keys(req.body).length === 0) {
+            console.log('❌ Empty request body received');
+            res.status(400).json({ 
+                success: false, 
+                message: "Request body is required. Please provide at least one field to update." 
+            });
+            return;
+        }
+
         // Validate request body
         const validatedData = updateProfileSchema.parse(req.body);
         const userId = req.user!.id;

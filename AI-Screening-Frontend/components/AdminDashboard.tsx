@@ -74,10 +74,35 @@ export function AdminDashboard() {
     if (authLoading) return
     if (!user) { router.replace('/auth'); return }
     if (user.role !== 'admin') { router.replace('/'); return }
-    setUsers(getAllUsers())
-    setJobs(getAllJobs())
-    setApplications(getApplications())
-  }, [user, authLoading, router])
+    
+    const loadAdminData = async () => {
+      try {
+        console.log('🔍 Loading admin dashboard data...')
+        
+        // Load users data
+        // TODO: Implement admin API for getting all users
+        // For now, use mock data as fallback
+        const usersData = getAllUsers()
+        console.log('👥 Users loaded:', usersData.length)
+        setUsers(usersData)
+        
+        // Load jobs data
+        const jobsResult = await getAllJobs()
+        console.log('💼 Jobs loaded:', jobsResult.length)
+        setJobs(jobsResult)
+        
+        // Load applications data
+        const applicationsResult = await getApplications()
+        console.log('📄 Applications loaded:', applicationsResult.length)
+        setApplications(applicationsResult)
+        
+      } catch (error) {
+        console.error('❌ Failed to load admin data:', error)
+      }
+    }
+    
+    loadAdminData()
+  }, [authLoading, user, router])
 
   if (authLoading || !user) {
     return (
@@ -88,7 +113,7 @@ export function AdminDashboard() {
   }
 
   const recruiters = users.filter((u) => u.role === 'recruiter')
-  const applicants = users.filter((u) => u.role === 'applicant')
+  const applicants = users.filter((u) => u.role === 'jobseeker')
   const openJobs = jobs.filter((j) => j.status === 'open')
   const screenedApps = applications.filter((a) => a.matchScore !== undefined)
   const avgScore = screenedApps.length
@@ -120,7 +145,7 @@ export function AdminDashboard() {
           </div>
           <div>
             <h1 className="text-4xl font-bold text-white">Admin Panel</h1>
-            <p className="text-gray-400 mt-0.5">Platform-wide oversight · {user.name}</p>
+            <p className="text-gray-400 mt-0.5">Platform-wide oversight · {user.fullName}</p>
           </div>
         </div>
       </motion.div>

@@ -148,19 +148,19 @@ export function NotificationsPage() {
                         iconBorder: 'border-red-500/30',
                         iconColor: 'text-red-400',
                         badge: 'badge-danger',
-                        title: 'Application Update',
+                        title: 'Oops! Sorry, not selected this time',
                         badgeText: 'Rejected'
                       }
                     default: // selected
                       return {
-                        border: 'border-emerald-500/20',
-                        bg: 'bg-emerald-500/5',
-                        iconBg: 'bg-emerald-500/10',
-                        iconBorder: 'border-emerald-500/30',
-                        iconColor: 'text-emerald-400',
+                        border: 'border-green-500/20',
+                        bg: 'bg-green-500/5',
+                        iconBg: 'bg-green-500/10',
+                        iconBorder: 'border-green-500/30',
+                        iconColor: 'text-green-400',
                         badge: 'badge-success',
-                        title: 'Congratulations! You have been selected for the interview stage',
-                        badgeText: 'Interview Stage'
+                        title: 'Congratulations! Your application has been selected!',
+                        badgeText: 'Selected'
                       }
                   }
                 }
@@ -169,7 +169,7 @@ export function NotificationsPage() {
 
                 return (
                   <motion.div
-                    key={notification.id}
+                    key={notification.id || `notification-${index}`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -211,7 +211,12 @@ export function NotificationsPage() {
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Calendar className="w-4 h-4" />
-                          <span>{new Date(notification.notifiedAt).toLocaleDateString()}</span>
+                          <span>
+                            {notification.notifiedAt 
+                              ? new Date(notification.notifiedAt).toLocaleDateString()
+                              : 'Recent'
+                            }
+                          </span>
                         </div>
                       </div>
 
@@ -283,7 +288,7 @@ export function NotificationsPage() {
             ) : (
               sentNotifications.map((notification, index) => (
                 <motion.div
-                  key={notification.id}
+                  key={notification.id || `sent-notification-${index}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -323,7 +328,12 @@ export function NotificationsPage() {
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Calendar className="w-4 h-4" />
-                          <span>{new Date(notification.notifiedAt).toLocaleDateString()}</span>
+                          <span>
+                            {notification.notifiedAt 
+                              ? new Date(notification.notifiedAt).toLocaleDateString()
+                              : 'Recent'
+                            }
+                          </span>
                         </div>
                       </div>
 
@@ -360,4 +370,3 @@ export function NotificationsPage() {
     </div>
   )
 }
-

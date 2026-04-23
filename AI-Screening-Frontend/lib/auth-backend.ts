@@ -178,9 +178,28 @@ export async function updateUserProfile(data: {
   companyName?: string
 }): Promise<{ user: User } | { error: string }> {
   try {
+    console.log('🔄 Frontend profile update called with data:', data);
+    
+    // Check if data is empty
+    if (!data || Object.keys(data).length === 0) {
+      console.log('❌ No data provided for profile update');
+      return { error: 'No data provided for profile update' };
+    }
+    
+    // Map frontend field names to backend field names
+    const backendData: any = {};
+    if (data.fullName) backendData.fullName = data.fullName;
+    if (data.preferredRoles) backendData.interestedRoles = data.preferredRoles; // Map to backend field
+    if (data.preferredLocations) backendData.preferredLocations = data.preferredLocations;
+    if (data.skills) backendData.skills = data.skills;
+    if (data.companyName) backendData.companyName = data.companyName;
+    
+    console.log('📤 Mapped data for backend:', backendData);
+    
     // Import userAPI here to avoid circular dependency
     const { userAPI } = await import('./api')
-    const response = await userAPI.updateProfile(data)
+    console.log('📤 Sending profile update request to:', '/users/profile');
+    const response = await userAPI.updateProfile(backendData)
     
     if (response.data.success) {
       const user = response.data.user
