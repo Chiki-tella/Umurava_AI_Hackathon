@@ -396,7 +396,16 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                 } catch (err: any) {
                     console.error("❌ Gemini AI error for", (applicant as any)?.fullName, ":", err.message);
                     app.score = 0;
-                    app.aiSummary = "Error computing summary.";
+                    
+                    if (err.message?.includes("leaked")) {
+                        app.aiSummary = "AI Screening Error: The API key has been reported as leaked and is disabled. Please rotate the API key.";
+                    } else if (err.message?.includes("403") || err.message?.includes("Unauthorized")) {
+                        app.aiSummary = "AI Screening Error: API key unauthorized or expired.";
+                    } else if (err.message?.includes("429")) {
+                        app.aiSummary = "AI Screening Error: Rate limit exceeded. Please try again later.";
+                    } else {
+                        app.aiSummary = "AI Screening Error: Failed to compute summary. Check server logs.";
+                    }
                 }
                 }
             } else {
