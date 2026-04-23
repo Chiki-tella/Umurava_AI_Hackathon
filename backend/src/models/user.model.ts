@@ -36,9 +36,11 @@ export const JobSeeker = User.discriminator<IJobSeeker>("jobseeker", jobSeekerSc
 
 export interface IRecruiter extends IUser {
     companyName: string;
+    companyWebsite?: string;
 }
 const recruiterSchema = new Schema<IRecruiter>({
     companyName: { type: String, required: true },
+    companyWebsite: { type: String },
 });
 export const Recruiter = User.discriminator<IRecruiter>("recruiter", recruiterSchema);
 

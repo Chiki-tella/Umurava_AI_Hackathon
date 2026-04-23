@@ -36,7 +36,7 @@ export function AuthProviderNew({ children }: { children: ReactNode }) {
         
         if (token && storedUser) {
           // Validate token with backend
-          const result = await updateUserProfile()
+          const result = await getMe()
           if ('user' in result) {
             setUser(result.user)
           } else {

@@ -15,6 +15,7 @@ export interface User {
   skills?: string[]
   // Recruiter-specific
   company?: string
+  companyWebsite?: string
   jobIds?: string[]
 }
 

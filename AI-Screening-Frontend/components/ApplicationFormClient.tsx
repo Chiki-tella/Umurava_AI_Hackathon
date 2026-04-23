@@ -101,7 +101,7 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
     await new Promise((r) => setTimeout(r, 1500))
 
     try {
-      const jobId = job._id || job.id;
+      const jobId = (job._id || job.id) as string;
       console.log('🚀 Submitting application for job:', jobId)
       console.log('📝 Application data:', { jobId, cvUrl: resumeFileName || undefined })
       
@@ -181,7 +181,7 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
           <h2 className="text-3xl font-bold text-white mb-3">Application Submitted!</h2>
           <p className="text-gray-400 mb-6 leading-relaxed">
             Your application for <span className="text-white font-medium">{job.title}</span> at{' '}
-            <span className="text-white font-medium">{job.company}</span> is being reviewed by our AI.
+            <span className="text-white font-medium">{job.companyName}</span> is being reviewed by our AI.
           </p>
           <div className="flex items-center justify-center gap-2 text-brand-violet text-sm">
             <Sparkles className="w-4 h-4 animate-pulse" />
@@ -204,7 +204,7 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
           <h1 className="text-4xl font-bold text-white mb-2">
             Apply for <span className="gradient-text">{job.title}</span>
           </h1>
-          <p className="text-gray-400">{job.company} · {job.location}</p>
+          <p className="text-gray-400">{job.companyName} · {job.location}</p>
         </div>
 
         {/* Progress steps */}

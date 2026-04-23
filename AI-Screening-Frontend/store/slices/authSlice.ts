@@ -4,12 +4,15 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 interface User {
   id: string;
   fullName: string;
+  name?: string;
   email: string;
   role: 'jobseeker' | 'recruiter' | 'admin';
   interestedRoles?: string[];
   preferredLocations?: string[];
   skills?: string[];
   companyName?: string;
+  company?: string;
+  companyWebsite?: string;
 }
 
 interface AuthState {

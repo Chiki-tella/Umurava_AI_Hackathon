@@ -5,6 +5,7 @@ export type UserRole = 'jobseeker' | 'recruiter' | 'admin'
 export interface User {
   id: string
   fullName: string
+  name?: string
   email: string
   role: UserRole
   // JobSeeker-specific
@@ -13,6 +14,8 @@ export interface User {
   skills?: string[]
   // Recruiter-specific
   companyName?: string
+  company?: string
+  companyWebsite?: string
 }
 
 const TOKEN_KEY = 'talentai_token'
@@ -60,7 +63,7 @@ export async function signUp(data: {
   companyName?: string
   interestedRoles?: string[]
   preferredLocations?: string[]
-  skills?: string[]
+  skills?: string | string[]
 }): Promise<{ user: User; token: string } | { error: string }> {
   try {
     console.log('🔍 Registration attempt:', { role: data.role, email: data.email })
@@ -117,6 +120,26 @@ export async function signUp(data: {
   }
 }
 
+export async function registerJobseeker(data: {
+  fullName: string
+  email: string
+  password: string
+  interestedRoles?: string[]
+  preferredLocations?: string[]
+  skills?: string | string[]
+}) {
+  return signUp({ ...data, role: 'jobseeker' })
+}
+
+export async function registerRecruiter(data: {
+  fullName: string
+  email: string
+  password: string
+  companyName: string
+}) {
+  return signUp({ ...data, role: 'recruiter' })
+}
+
 export async function signIn(email: string, password: string): Promise<{ user: User; token: string } | { error: string }> {
   try {
     console.log('🔍 Login attempt:', { email, passwordLength: password?.length })
@@ -171,11 +194,14 @@ export function signOut() {
 }
 
 export async function updateUserProfile(data: {
+  interestedRoles?: string[]
   preferredRoles?: string[]
   preferredLocations?: string[]
-  skills?: string[]
+  skills?: string | string[]
   fullName?: string
   companyName?: string
+  name?: string
+  company?: string
 }): Promise<{ user: User } | { error: string }> {
   try {
     console.log('🔄 Frontend profile update called with data:', data);
@@ -188,11 +214,15 @@ export async function updateUserProfile(data: {
     
     // Map frontend field names to backend field names
     const backendData: any = {};
-    if (data.fullName) backendData.fullName = data.fullName;
-    if (data.preferredRoles) backendData.interestedRoles = data.preferredRoles; // Map to backend field
+    if (data.fullName || data.name) backendData.fullName = data.fullName || data.name;
+    if (data.interestedRoles || data.preferredRoles) backendData.interestedRoles = data.interestedRoles || data.preferredRoles;
     if (data.preferredLocations) backendData.preferredLocations = data.preferredLocations;
-    if (data.skills) backendData.skills = data.skills;
-    if (data.companyName) backendData.companyName = data.companyName;
+    
+    if (data.skills) {
+      backendData.skills = Array.isArray(data.skills) ? data.skills.join(',') : data.skills;
+    }
+    
+    if (data.companyName || data.company) backendData.companyName = data.companyName || data.company;
     
     console.log('📤 Mapped data for backend:', backendData);
     

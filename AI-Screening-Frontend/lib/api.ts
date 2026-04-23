@@ -21,7 +21,7 @@ apiClient.interceptors.request.use(
     }
     console.log('🌐 API Request:', {
       method: config.method?.toUpperCase(),
-      url: config.baseURL + config.url,
+      url: (config.baseURL || '') + (config.url || ''),
       data: config.data,
       hasToken: !!token
     })
@@ -71,12 +71,11 @@ apiClient.interceptors.response.use(
 )
 
 // API Response type
-export interface ApiResponse<T = any> {
+export type ApiResponse<T = {}> = {
   success: boolean
-  data?: T
   message?: string
   token?: string
-}
+} & T
 
 // Auth APIs
 export const authAPI = {

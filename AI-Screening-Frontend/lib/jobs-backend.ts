@@ -2,6 +2,7 @@ import { jobAPI } from './api'
 
 export interface Job {
   _id: string
+  id?: string
   title: string
   description: string
   requiredSkills: string[]
@@ -57,6 +58,8 @@ export async function createJob(data: {
   companyWebsite?: string
   salary?: string
   employmentType: 'full-time' | 'part-time' | 'contract' | 'internship' | 'remote'
+  experience?: string
+  education?: string
 }): Promise<{ job: Job } | { error: string }> {
   try {
     const response = await jobAPI.createJob(data)

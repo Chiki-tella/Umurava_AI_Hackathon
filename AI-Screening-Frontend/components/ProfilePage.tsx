@@ -31,7 +31,7 @@ export function ProfilePage() {
   useEffect(() => {
     if (loading) return
     if (!user) { router.replace('/auth'); return }
-    setPrefRoles(user.preferredRoles ?? [])
+    setPrefRoles(user.interestedRoles ?? [])
     setPrefLocations(user.preferredLocations ?? [])
     setSkills(user.skills?.join(', ') ?? '')
     
@@ -84,7 +84,7 @@ export function ProfilePage() {
 
   const handleSave = () => {
     updateUserProfile({
-      preferredRoles: prefRoles,
+      interestedRoles: prefRoles,
       preferredLocations: prefLocations,
       skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
     })
