@@ -185,7 +185,7 @@ export function ProfilePage() {
             ) : (
               <div className="space-y-3">
                 {myApplications.map((app) => {
-                  const job = app.jobDetails || jobs.find((j) => j._id === app.jobId)
+                  const job = (app.jobId as any) || jobs.find((j) => j._id === app.jobId)
                   return (
                     <div key={app._id} className="flex items-center justify-between p-4 rounded-xl bg-dark-700/50 border border-white/5">
                       <div>

@@ -9,6 +9,9 @@
     "seed": "ts-node src/seed.ts",
     "reset-seed": "ts-node src/reset-seed.ts",
     "create-admin": "ts-node src/create-admin.ts",
+    "create-recruiters": "ts-node src/create-recruiters.ts",
+    "fix-applications": "ts-node src/fix-applications.ts",
+    "test-endpoints": "ts-node src/test-endpoints.ts",
     "populate-all": "ts-node src/populate-all.ts"
   },
   "keywords": [],

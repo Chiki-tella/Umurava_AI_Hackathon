@@ -101,9 +101,16 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
     await new Promise((r) => setTimeout(r, 1500))
 
     try {
-      console.log('🚀 Submitting application for job:', job._id || job.id)
+      const jobId = job._id || job.id;
+      console.log('🚀 Submitting application for job:', jobId)
+      console.log('📝 Application data:', { jobId, cvUrl: resumeFileName || undefined })
+      
+      // Check if user is authenticated
+      const token = localStorage.getItem('talentai_token');
+      console.log('🔐 Auth token exists:', !!token)
+      
       const result = await applyToJob({
-        jobId: job._id || job.id,
+        jobId: jobId,
         cvUrl: resumeFileName || undefined
       })
       
@@ -111,6 +118,7 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
       
       if ('application' in result) {
         console.log('✅ Application submitted successfully!')
+        console.log('📋 Application details:', result.application)
         setSubmitted(true)
       } else if ('error' in result) {
         console.error('❌ Application failed:', result.error)
@@ -122,6 +130,11 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
       }
     } catch (error: any) {
       console.error('❌ Application error:', error)
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      })
       alert(`Application failed: ${error.message || 'Unknown error'}`)
     } finally {
       setIsSubmitting(false)

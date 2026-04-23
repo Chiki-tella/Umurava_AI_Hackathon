@@ -127,16 +127,32 @@ export default function ApplyPage() {
         formDataToSend.append('resume', formData.resume)
       }
 
-      // TODO: Implement application submission API call
-      console.log('Submitting application:', {
+      // Make API call to submit application
+      console.log('🚀 Submitting application:', {
         jobId: job._id,
         ...formData,
         resumeFile: formData.resume?.name
       })
 
-      // For now, just show success and redirect
-      alert('Application submitted successfully!')
-      router.push('/jobs')
+      try {
+        const { applyToJob } = await import('@/lib/applications-backend')
+        const result = await applyToJob({
+          jobId: job._id,
+          cvUrl: formData.resume?.name
+        })
+
+        if ('application' in result) {
+          console.log('✅ Application submitted successfully!')
+          alert('Application submitted successfully!')
+          router.push('/jobs')
+        } else if ('error' in result) {
+          console.error('❌ Application failed:', result.error)
+          alert(`Application failed: ${result.error}`)
+        }
+      } catch (error: any) {
+        console.error('❌ Application error:', error)
+        alert(`Application failed: ${error.message || 'Unknown error'}`)
+      }
       
     } catch (error) {
       console.error('Failed to submit application:', error)

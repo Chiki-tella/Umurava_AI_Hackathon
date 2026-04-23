@@ -97,15 +97,15 @@ function ApplicationCard({
 
           {/* Avatar */}
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-purple to-brand-pink flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-            {app.applicantDetails?.fullName?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'}
+            {(app.applicantId as any)?.fullName?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'}
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4 mb-1">
               <div>
-                <h3 className="text-lg font-semibold text-white">{app.applicantDetails?.fullName || 'Unknown'}</h3>
-                <p className="text-sm text-gray-400">{app.applicantDetails?.email || 'No email'}</p>
+                <h3 className="text-lg font-semibold text-white">{(app.applicantId as any)?.fullName || 'Unknown'}</h3>
+                <p className="text-sm text-gray-400">{(app.applicantId as any)?.email || 'No email'}</p>
               </div>
               <span className={clsx('badge flex-shrink-0', score.badge)}>{score.label}</span>
             </div>
@@ -134,7 +134,7 @@ function ApplicationCard({
             <span className="text-xs font-medium text-gray-300">Skills</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {(app.applicantDetails?.skills ?? []).slice(0, 6).map((skill: string, i: number) => (
+            {((app.applicantId as any)?.skills ?? []).slice(0, 6).map((skill: string, i: number) => (
               <span key={i} className={clsx(
                 'px-2.5 py-1 rounded-lg text-xs border',
                 requiredSkills.map(s => s.toLowerCase()).includes(skill.toLowerCase())
@@ -234,7 +234,7 @@ function ApplicationCard({
                   <div>
                     <p className="text-xs font-medium text-gray-400 mb-2">All Skills</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {(app.applicantDetails?.skills ?? []).map((skill: string, i: number) => (
+                      {((app.applicantId as any)?.skills ?? []).map((skill: string, i: number) => (
                         <span key={i} className={clsx(
                           'px-2.5 py-1 rounded-lg text-xs border',
                           requiredSkills.map(s => s.toLowerCase()).includes(skill.toLowerCase())
