@@ -128,8 +128,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role }
         });
     } catch (error: any) {
-        console.error('❌ Login error:', error);
-        res.status(400).json({ success: false, message: error.message || "Login failed" });
+        console.error('❌ Login error:', {
+            name: error.name,
+            message: error.message,
+            issues: error.issues,
+            statusCode: error.statusCode,
+            requestBody: req.body,
+            headers: req.headers
+        });
+        res.status(400).json({ 
+            success: false, 
+            message: error.message || "Login failed",
+            details: error.issues || null
+        });
     }
 };
 

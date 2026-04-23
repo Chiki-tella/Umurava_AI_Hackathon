@@ -119,9 +119,12 @@ export async function signUp(data: {
 
 export async function signIn(email: string, password: string): Promise<{ user: User; token: string } | { error: string }> {
   try {
-    console.log('🔍 Login attempt:', { email })
+    console.log('🔍 Login attempt:', { email, passwordLength: password?.length })
     
-    const response = await authAPI.login({ email, password })
+    const requestData = { email, password }
+    console.log('📤 Sending login request:', requestData)
+    
+    const response = await authAPI.login(requestData)
     
     console.log('📡 Login response:', response.data)
     
@@ -146,12 +149,7 @@ export async function signIn(email: string, password: string): Promise<{ user: U
   }
 }
 
-export function signOut() {
-  setCurrentUser(null)
-  setToken(null)
-}
-
-export async function updateUserProfile(): Promise<{ user: User } | { error: string }> {
+export async function getMe(): Promise<{ user: User } | { error: string }> {
   try {
     const response = await authAPI.getMe()
     
@@ -163,7 +161,47 @@ export async function updateUserProfile(): Promise<{ user: User } | { error: str
       return { error: response.data.message || 'Failed to get user profile' }
     }
   } catch (error: any) {
-    return { error: error.response?.data?.message || 'Failed to get user profile' }
+    return { error: error.response?.data?.message || error.message || 'Failed to get user profile' }
+  }
+}
+
+export function signOut() {
+  setCurrentUser(null)
+  setToken(null)
+}
+
+export async function updateUserProfile(data: {
+  preferredRoles?: string[]
+  preferredLocations?: string[]
+  skills?: string[]
+  fullName?: string
+  companyName?: string
+}): Promise<{ user: User } | { error: string }> {
+  try {
+    // Import userAPI here to avoid circular dependency
+    const { userAPI } = await import('./api')
+    const response = await userAPI.updateProfile(data)
+    
+    if (response.data.success) {
+      const user = response.data.user
+      setCurrentUser(user)
+      return { user }
+    } else {
+      return { error: response.data.message || 'Failed to update user profile' }
+    }
+  } catch (error: any) {
+    console.error('💥 Profile update error in auth-backend:', {
+      name: error.name,
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      config: error.config,
+      code: error.code,
+      isAxiosError: error.isAxiosError,
+      fullError: error
+    })
+    return { error: error.response?.data?.message || error.message || 'Failed to update user profile' }
   }
 }
 

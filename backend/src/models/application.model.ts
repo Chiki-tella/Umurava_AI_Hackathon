@@ -7,6 +7,7 @@ export interface IApplication extends Document {
     status: "pending" | "selected" | "rejected";
     score?: number; // AI ranking score
     aiSummary?: string; // Gemini AI Summary
+    github?: string; // Extracted from CV
     createdAt: Date;
 }
 
@@ -17,6 +18,7 @@ const applicationSchema = new Schema<IApplication>({
     status: { type: String, enum: ["pending", "selected", "rejected"], default: "pending" },
     score: { type: Number, min: 0, max: 100 },
     aiSummary: { type: String },
+    github: { type: String, trim: true },
     createdAt: { type: Date, default: Date.now },
 });
 

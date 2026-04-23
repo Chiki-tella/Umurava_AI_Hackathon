@@ -6,7 +6,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/a
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -45,10 +45,20 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     console.error('❌ API Error:', {
+      name: error.name,
+      message: error.message,
       status: error.response?.status,
+      statusText: error.response?.statusText,
       url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
       data: error.response?.data,
-      message: error.message
+      requestData: error.config?.data,
+      headers: error.config?.headers,
+      isAxiosError: error.isAxiosError,
+      code: error.code,
+      errno: error.errno,
+      syscall: error.syscall,
+      fullError: error
     })
     if (error.response?.status === 401) {
       // Token expired or invalid, clear local storage
@@ -137,6 +147,17 @@ export const notificationAPI = {
   getNotifications: () => apiClient.get<ApiResponse<{ notifications: any[] }>>('/notifications'),
 
   markAsRead: (id: string) => apiClient.patch<ApiResponse<{ notification: any }>>(`/notifications/${id}/read`),
+}
+
+// User Profile APIs
+export const userAPI = {
+  updateProfile: (data: {
+    fullName?: string
+    interestedRoles?: string[]
+    preferredLocations?: string[]
+    skills?: string | string[]
+    companyName?: string
+  }) => apiClient.patch<ApiResponse<{ user: any }>>('/users/profile', data),
 }
 
 export default apiClient

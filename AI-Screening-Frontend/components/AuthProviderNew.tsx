@@ -6,6 +6,7 @@ import {
   setCurrentUser, 
   signOut as authSignOut, 
   updateUserProfile,
+  getMe,
   getToken,
   setToken,
   type User 
@@ -63,7 +64,7 @@ export function AuthProviderNew({ children }: { children: ReactNode }) {
     if (!initialized) return
     
     try {
-      const result = await updateUserProfile()
+      const result = await getMe()
       if ('user' in result) {
         setUser(result.user)
       }
