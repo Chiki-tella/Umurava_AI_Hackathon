@@ -157,5 +157,3 @@ Our AI screening engine utilizes **Gemini 1.5 Flash** to perform deep analysis o
 3.  **Normalization:** Scores are ranked and stored in MongoDB for instant retrieval by recruiters.
 
 ---
-
-
