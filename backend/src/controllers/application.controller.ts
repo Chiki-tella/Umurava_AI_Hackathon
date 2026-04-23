@@ -239,6 +239,7 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     ).join('\n\n') || 'No experience details found';
                     
                     const languagesText = cvData?.languages?.join(', ') || 'No languages specified';
+                    const rawCvText = cvData?.rawText || 'No raw text available';
                     
                     const prompt = `
                     You are an expert AI technical recruiter conducting a comprehensive candidate evaluation. 
@@ -252,6 +253,7 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     === CANDIDATE PROFILE ===
                     Name: ${applicant.fullName}
                     Profile Skills: ${applicant.skills?.join(", ") || "None listed"}
+                    GitHub (from profile): ${applicant.githubUrl || "Not provided"}
                     Preferred Roles: ${(applicant as any).interestedRoles?.join(", ") || "Not specified"}
                     Preferred Locations: ${(applicant as any).preferredLocations?.join(", ") || "Not specified"}
                     
@@ -271,6 +273,9 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     
                     EXPERIENCE:
                     ${experienceText}
+
+                    FULL CV TEXT (FOR DETAILED ANALYSIS):
+                    ${rawCvText}
                     ` : 'No CV available for analysis'}
                     
                     === EVALUATION TASK ===
@@ -291,7 +296,7 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                       "concerns": ["<list of any concerns or gaps>"],
                       "missingSkills": ["<specific required skills the applicant is missing>"],
                       "gaps": ["<detailed description of what the applicant is lacking and what they need to improve>"],
-                      "github": "${cvData?.github || 'Not provided'}",
+                      "github": "<candidate's GitHub URL if found in profile or CV text, otherwise 'Not provided'>",
                       "contradictions": ["<any contradictions between profile and CV>"]
                     }
                     `;
@@ -357,7 +362,7 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     const contradictions = aiData.contradictions && aiData.contradictions.length > 0 
                         ? aiData.contradictions.map((c: string) => `• ${c}`).join('\n') 
                         : null;
-                    const github = aiData.github || cvData?.github || 'Not provided';
+                    const github = applicant.githubUrl || aiData.github || cvData?.github || 'Not provided';
                     
                     // Build organized summary with clean formatting
                     let organizedSummary = `ASSESSMENT\n${summary}`;

@@ -26,11 +26,13 @@ export interface IJobSeeker extends IUser {
     interestedRoles: string[];
     preferredLocations: string[];
     skills: string[];
+    githubUrl?: string;
 }
 const jobSeekerSchema = new Schema<IJobSeeker>({
     interestedRoles: { type: [String], default: [] },
     preferredLocations: { type: [String], default: [] },
     skills: { type: [String], default: [] },
+    githubUrl: { type: String, trim: true },
 });
 export const JobSeeker = User.discriminator<IJobSeeker>("jobseeker", jobSeekerSchema);
 

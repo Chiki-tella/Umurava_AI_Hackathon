@@ -21,7 +21,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
         const validatedData = updateProfileSchema.parse(req.body);
         const userId = req.user!.id;
         const userRole = req.user!.role;
-        const { fullName, interestedRoles, preferredLocations, skills, companyName } = validatedData;
+        const { fullName, interestedRoles, preferredLocations, skills, companyName, githubUrl } = validatedData;
 
         console.log(`🔄 Updating profile for user: ${userId}, role: ${userRole}`);
 
@@ -45,6 +45,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
                     interestedRoles: interestedRoles || [],
                     preferredLocations: preferredLocations || [],
                     skills: skillsArray,
+                    githubUrl: githubUrl,
                 },
                 { new: true, runValidators: true }
             );
@@ -85,6 +86,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
                     interestedRoles: (updatedUser as any).interestedRoles,
                     preferredLocations: (updatedUser as any).preferredLocations,
                     skills: (updatedUser as any).skills,
+                    githubUrl: (updatedUser as any).githubUrl,
                 }),
                 ...(updatedUser.role === 'recruiter' && {
                     companyName: (updatedUser as any).companyName,

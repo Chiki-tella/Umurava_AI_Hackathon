@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import { connectDatabase } from './config/db';
 import { Job } from './models/job.model';
-import { User, Recruiter, IRecruiter } from './models/user.model';
+import { User, Recruiter, IRecruiter, JobSeeker } from './models/user.model';
 import bcrypt from 'bcrypt';
 
 dotenv.config();
@@ -55,23 +55,24 @@ const populateAllAccounts = async () => {
     await User.deleteMany({ role: 'jobseeker' });
     
     const jobSeekers = [
-      { email: 'john.developer@email.com', fullName: 'John Developer', password: 'seeker123' },
-      { email: 'sarah.designer@email.com', fullName: 'Sarah Designer', password: 'seeker123' },
-      { email: 'mike.backend@email.com', fullName: 'Mike Backend', password: 'seeker123' },
-      { email: 'emma.fullstack@email.com', fullName: 'Emma Fullstack', password: 'seeker123' },
-      { email: 'alex.devops@email.com', fullName: 'Alex DevOps', password: 'seeker123' }
+      { email: 'john.developer@email.com', fullName: 'John Developer', password: 'seeker123', githubUrl: 'https://github.com/johndev' },
+      { email: 'sarah.designer@email.com', fullName: 'Sarah Designer', password: 'seeker123', githubUrl: 'https://github.com/sarahdesign' },
+      { email: 'mike.backend@email.com', fullName: 'Mike Backend', password: 'seeker123', githubUrl: 'https://github.com/mikeback' },
+      { email: 'emma.fullstack@email.com', fullName: 'Emma Fullstack', password: 'seeker123', githubUrl: 'https://github.com/emmafull' },
+      { email: 'alex.devops@email.com', fullName: 'Alex DevOps', password: 'seeker123', githubUrl: 'https://github.com/alexdevops' }
     ];
     
-    for (const seekerData of jobSeekers) {
+    for (const seekerData of jobSeekers as any[]) {
       const hashedPassword = await bcrypt.hash(seekerData.password, 10);
-      const seeker = new User({
+      const seeker = new JobSeeker({
         email: seekerData.email,
         fullName: seekerData.fullName,
         password: hashedPassword,
-        role: 'jobseeker'
+        role: 'jobseeker',
+        githubUrl: seekerData.githubUrl
       });
       await seeker.save();
-      console.log(`✅ Job seeker created: ${seekerData.email} / ${seekerData.password}`);
+      console.log(`✅ Job seeker created: ${seekerData.email} / ${seekerData.password} (GitHub: ${seekerData.githubUrl || 'N/A'})`);
     }
     
     // 4. Delete existing jobs and create new ones
