@@ -1,11 +1,11 @@
-import { Applicant } from "../models/applicant.model";
+import { JobSeeker as JobSeekerModel } from "../models/user.model";
 import { parseCsvApplicants, parseExcelApplicants } from "../utils/fileParsers";
 import { applicantUploadSchema, createApplicantSchema } from "../utils/validation";
 import { AppError } from "../utils/AppError";
 
 export const createApplicant = async (payload: unknown) => {
   const parsed = createApplicantSchema.parse(payload);
-  return Applicant.create(parsed);
+  return JobSeekerModel.create(parsed);
 };
 
 export const createApplicantsFromFile = async (
@@ -31,5 +31,5 @@ export const createApplicantsFromFile = async (
     ? await parseCsvApplicants(file.buffer)
     : parseExcelApplicants(file.buffer);
 
-  return Applicant.insertMany(parsedApplicants, { ordered: false });
+  return JobSeekerModel.insertMany(parsedApplicants, { ordered: false });
 };

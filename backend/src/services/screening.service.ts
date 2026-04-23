@@ -1,8 +1,8 @@
 import { Types } from "mongoose";
 import { screenCandidates } from "../ai/gemini.service";
-import { Applicant } from "../models/applicant.model";
+import { JobSeeker as JobSeekerModel } from "../models/user.model";
 import { Job } from "../models/job.model";
-import { ScreeningResult } from "../models/screeningResult.model";
+import { Application } from "../models/application.model";
 import { AppError } from "../utils/AppError";
 
 const TOP_LIMIT = 10;
@@ -17,7 +17,7 @@ export const screenApplicantsForJob = async (jobId: string) => {
     throw new AppError("Job not found", 404);
   }
 
-  const applicants = await Applicant.find().sort({ createdAt: -1 });
+  const applicants = await JobSeekerModel.find().sort({ createdAt: -1 });
   if (applicants.length === 0) {
     throw new AppError("No applicants available for screening", 400);
   }
@@ -25,7 +25,7 @@ export const screenApplicantsForJob = async (jobId: string) => {
   const aiResults = await screenCandidates(job, applicants);
 
   const applicantsByName = new Map(
-    applicants.map((applicant) => [applicant.name.toLowerCase(), applicant])
+    applicants.map((applicant: any) => [applicant.fullName.toLowerCase(), applicant])
   );
 
   const normalized = aiResults
@@ -33,22 +33,19 @@ export const screenApplicantsForJob = async (jobId: string) => {
       const applicant = applicantsByName.get(candidate.name.toLowerCase());
       if (!applicant) return null;
       return {
-        applicantId: applicant._id,
+        applicantId: (applicant as any)._id,
         score: candidate.score,
-        strengths: candidate.strengths ?? [],
-        gaps: candidate.gaps ?? [],
-        recommendation: candidate.recommendation || "No recommendation provided",
-        rank: candidate.rank
+        aiSummary: candidate.recommendation || "No recommendation provided",
+        status: "pending" as const
       };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null)
     .sort((a, b) => b.score - a.score)
-    .slice(0, TOP_LIMIT)
-    .map((candidate, index) => ({ ...candidate, rank: index + 1 }));
+    .slice(0, TOP_LIMIT);
 
-  await ScreeningResult.deleteMany({ jobId });
+  await Application.deleteMany({ jobId });
 
-  const inserted = await ScreeningResult.insertMany(
+  const inserted = await Application.insertMany(
     normalized.map((candidate) => ({
       jobId,
       ...candidate
@@ -63,7 +60,7 @@ export const getResultsByJobId = async (jobId: string) => {
     throw new AppError("Invalid job id", 400);
   }
 
-  return ScreeningResult.find({ jobId })
+  return Application.find({ jobId })
     .populate("applicantId")
-    .sort({ rank: 1, score: -1 });
+    .sort({ score: -1 });
 };

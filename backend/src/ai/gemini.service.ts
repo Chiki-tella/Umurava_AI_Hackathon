@@ -1,5 +1,5 @@
 import axios from "axios";
-import { IApplicant } from "../models/applicant.model";
+import { IJobSeeker } from "../models/user.model";
 import { IJob } from "../models/job.model";
 import { aiScreeningResponseSchema } from "../utils/validation";
 import { AppError } from "../utils/AppError";
@@ -18,7 +18,7 @@ const sanitizeGeminiJson = (rawText: string): string =>
 
 export const screenCandidates = async (
   job: IJob,
-  applicants: IApplicant[]
+  applicants: IJobSeeker[]
 ): Promise<AIScreeningResult[]> => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -47,7 +47,7 @@ ${JSON.stringify(
       title: job.title,
       description: job.description,
       requiredSkills: job.requiredSkills,
-      experienceLevel: job.experienceLevel
+      experience: job.experience
     },
     null,
     2
@@ -56,12 +56,12 @@ ${JSON.stringify(
 Applicants:
 ${JSON.stringify(
     applicants.map((applicant) => ({
-      name: applicant.name,
+      name: applicant.fullName,
       email: applicant.email,
       skills: applicant.skills,
-      experience: applicant.experience,
-      education: applicant.education,
-      resumeUrl: applicant.resumeUrl ?? null
+      experience: (applicant as any).experience || "Not provided",
+      education: (applicant as any).education || "Not provided",
+      resumeUrl: (applicant as any).resumeUrl ?? null
     })),
     null,
     2
