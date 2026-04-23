@@ -9,7 +9,7 @@ import {
   Mail, Send, UserCheck
 } from 'lucide-react'
 import { getRecruiterJobs, createJob } from '@/lib/jobs-backend'
-import { getJobApplications, screenApplicants, selectCandidate } from '@/lib/applications-backend'
+import { getJobApplications, screenApplicants, selectCandidate, type Application } from '@/lib/applications-backend'
 import { useAuthContextNew } from '@/components/AuthProviderNew'
 import { clsx } from 'clsx'
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts'
@@ -97,7 +97,7 @@ function ApplicationCard({
 
           {/* Avatar */}
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-purple to-brand-pink flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-            {(app.applicantId as any)?.fullName?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'}
+            {(app.applicantId as any)?.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'U'}
           </div>
 
           {/* Info */}
@@ -596,7 +596,7 @@ export function RecruiterDashboard() {
                       showResults={showResults}
                       onToggle={() => setExpandedId(expandedId === app._id ? null : app._id)}
                       requiredSkills={selectedJob?.requiredSkills ?? []}
-                      onSelect={handleSelectCandidate}
+                      onSelect={handleAcceptCandidate}
                       onNotify={handleNotifyCandidate}
                       onAccept={handleAcceptCandidate}
                       onReject={handleRejectCandidate}

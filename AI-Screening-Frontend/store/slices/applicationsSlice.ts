@@ -43,8 +43,8 @@ export const applyToJob = createAsyncThunk(
   async (data: { jobId: string; cvUrl?: string }, { rejectWithValue }) => {
     try {
       const { applicationAPI } = await import('@/lib/api');
-      const response = await applicationAPI.apply(data);
-      return response.data.data;
+      const response = await applicationAPI.applyToJob(data);
+      return response.data.application;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to apply to job');
     }
@@ -57,7 +57,7 @@ export const fetchMyApplications = createAsyncThunk(
     try {
       const { applicationAPI } = await import('@/lib/api');
       const response = await applicationAPI.getMyApplications();
-      return response.data.data || [];
+      return response.data.applications || [];
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch applications');
     }
@@ -70,7 +70,7 @@ export const fetchJobApplications = createAsyncThunk(
     try {
       const { applicationAPI } = await import('@/lib/api');
       const response = await applicationAPI.getJobApplications(jobId);
-      return response.data.data || [];
+      return response.data.applications || [];
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch job applications');
     }
@@ -83,7 +83,7 @@ export const screenApplicants = createAsyncThunk(
     try {
       const { applicationAPI } = await import('@/lib/api');
       const response = await applicationAPI.screenApplicants(jobId);
-      return response.data.data || [];
+      return response.data.applications || [];
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to screen applicants');
     }
@@ -95,8 +95,8 @@ export const selectCandidate = createAsyncThunk(
   async (data: { applicationId: string }, { rejectWithValue }) => {
     try {
       const { applicationAPI } = await import('@/lib/api');
-      const response = await applicationAPI.selectCandidate(data.applicationId);
-      return response.data.data;
+      const response = await applicationAPI.selectCandidate(data.applicationId, { status: 'selected' });
+      return response.data.application;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to select candidate');
     }

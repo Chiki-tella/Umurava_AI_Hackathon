@@ -40,11 +40,11 @@ const initialState: JobsState = {
 // Async thunks
 export const fetchJobs = createAsyncThunk(
   'jobs/fetchJobs',
-  async (params?: { location?: string; type?: string; title?: string }, { rejectWithValue }) => {
+  async (params: { location?: string; type?: string; title?: string } | undefined, { rejectWithValue }) => {
     try {
       const { jobAPI } = await import('@/lib/api');
       const response = await jobAPI.getJobs(params);
-      return response.data.data || [];
+      return response.data.jobs || [];
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch jobs');
     }
@@ -56,8 +56,8 @@ export const fetchRecommendedJobs = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const { jobAPI } = await import('@/lib/api');
-      const response = await jobAPI.getRecommended();
-      return response.data.data || [];
+      const response = await jobAPI.getRecommendedJobs();
+      return response.data.jobs || [];
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch recommended jobs');
     }

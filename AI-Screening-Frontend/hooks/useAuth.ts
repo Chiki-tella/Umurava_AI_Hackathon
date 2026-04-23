@@ -6,6 +6,7 @@ import {
   setCurrentUser, 
   signOut as authSignOut, 
   updateUserProfile,
+  getMe,
   isAuth,
   type User 
 } from '@/lib/auth-backend'
@@ -26,7 +27,7 @@ export function useAuth() {
       try {
         if (isAuth()) {
           // Try to refresh user data from backend
-          const result = await updateUserProfile()
+          const result = await getMe()
           if ('user' in result) {
             setUser(result.user)
           } else {
@@ -51,7 +52,7 @@ export function useAuth() {
     if (!mounted) return
     
     if (isAuth()) {
-      const result = await updateUserProfile()
+      const result = await getMe()
       if ('user' in result) {
         setUser(result.user)
       }
