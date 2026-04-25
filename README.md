@@ -1,5 +1,10 @@
 # 🚀 TalentAI — AI-Powered Hiring Platform
 
+> [!IMPORTANT]
+> **Live Demo (Staging):** [https://talent-ai-demo.vercel.app](https://talent-ai-demo.vercel.app)  
+> **Backend API:** [https://talent-ai-api.onrender.com](https://talent-ai-api.onrender.com)  
+> **Documentation:** [Technical Documentation](./TECHNICAL_DOCUMENTATION.md) | [Presentation Slides Content](./PRESENTATION.md)
+
 TalentAI is a state-of-the-art full-stack web application designed to revolutionize the recruitment process. By leveraging the power of **Google Gemini 1.5 Flash**, it automates candidate screening, providing recruiters with instant, data-driven insights.
 
 ---
