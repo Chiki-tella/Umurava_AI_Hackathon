@@ -35,10 +35,15 @@ export const applyToJob = async (req: AuthRequest, res: Response): Promise<void>
             jobId: data.jobId,
             applicantId: req.user!.id,
             cvUrl: data.cvUrl || "mock_cv_url.pdf",
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phone: data.phone,
             experience: data.experience,
             education: data.education,
             portfolio: data.portfolio,
-            skills: data.skills
+            skills: data.skills,
+            coverLetter: data.coverLetter
         });
         console.log('✅ Application created successfully:', application._id);
 
@@ -251,10 +256,13 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                             `${exp.title} at ${exp.company}${exp.duration ? ` (${exp.duration})` : ''}${exp.description ? `\nDescription: ${exp.description}` : ''}`
                           ).join('\n\n') || 'No experience details found');
                     
+                    const coverLetterText = app.coverLetter ? `\nCOVER LETTER:\n${app.coverLetter}\n` : '';
+                    
                     const languagesText = cvData?.languages?.join(', ') || 'No languages specified';
                     const rawCvText = cvData?.rawText || 'No raw text available';
                     
                     const portfolioUrl = app.portfolio || applicant.githubUrl || cvData?.github || "Not provided";
+                    const candidateName = (app.firstName || app.lastName) ? `${app.firstName || ''} ${app.lastName || ''}`.trim() : applicant.fullName;
                     
                     const prompt = `
                     You are an expert AI technical recruiter conducting a comprehensive candidate evaluation. 
@@ -268,11 +276,14 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     Required Experience: ${job.experience || "Not specified"}
                     
                     === CANDIDATE PROFILE ===
-                    Name: ${applicant.fullName}
+                    Name: ${candidateName}
+                    Email: ${app.email || applicant.email}
+                    Phone: ${app.phone || 'Not provided'}
                     Skills (Combined from form/profile/CV): ${uniqueSkills.join(", ") || "None listed"}
                     Portfolio/GitHub: ${portfolioUrl}
                     Preferred Roles: ${(applicant as any).interestedRoles?.join(", ") || "Not specified"}
-                    Preferred Locations: ${(applicant as any).preferredLocations?.join(", ") || "Not specified"}ferred Locations: ${(applicant as any).preferredLocations?.join(", ") || "Not specified"}
+                    Preferred Locations: ${(applicant as any).preferredLocations?.join(", ") || "Not specified"}
+                    ${coverLetterText}ferred Locations: ${(applicant as any).preferredLocations?.join(", ") || "Not specified"}
                     
                     === CV ANALYSIS ===
                     ${cvData ? `

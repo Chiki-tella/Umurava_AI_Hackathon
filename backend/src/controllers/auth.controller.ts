@@ -11,6 +11,19 @@ const generateToken = (id: string, role: string) => {
     });
 };
 
+const formatError = (error: any, defaultMessage: string): string => {
+    if (error.errors && Array.isArray(error.errors)) {
+        return error.errors.map((e: any) => e.message).join(", ");
+    }
+    try {
+        const parsed = JSON.parse(error.message);
+        if (Array.isArray(parsed) && parsed[0]?.message) {
+            return parsed.map((e: any) => e.message).join(", ");
+        }
+    } catch (e) {}
+    return error.message || defaultMessage;
+};
+
 export const registerJobSeeker = async (req: Request, res: Response): Promise<void> => {
     try {
         const data = registerJobSeekerSchema.parse(req.body);
@@ -45,7 +58,7 @@ export const registerJobSeeker = async (req: Request, res: Response): Promise<vo
             user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role }
         });
     } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message || "Registration failed" });
+        res.status(400).json({ success: false, message: formatError(error, "Registration failed") });
     }
 };
 
@@ -76,7 +89,7 @@ export const registerRecruiter = async (req: Request, res: Response): Promise<vo
             user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role }
         });
     } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message || "Registration failed" });
+        res.status(400).json({ success: false, message: formatError(error, "Registration failed") });
     }
 };
 
@@ -138,7 +151,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         });
         res.status(400).json({ 
             success: false, 
-            message: error.message || "Login failed",
+            message: formatError(error, "Login failed"),
             details: error.issues || null
         });
     }
