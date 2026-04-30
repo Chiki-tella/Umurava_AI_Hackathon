@@ -249,6 +249,8 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     Position: ${job.title}
                     Description: ${job.description}
                     Required Skills: ${job.requiredSkills.join(", ")}
+                    Required Education: ${job.education || "Not specified"}
+                    Required Experience: ${job.experience || "Not specified"}
                     
                     === CANDIDATE PROFILE ===
                     Name: ${applicant.fullName}
