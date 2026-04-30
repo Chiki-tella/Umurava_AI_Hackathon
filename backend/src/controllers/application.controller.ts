@@ -35,6 +35,10 @@ export const applyToJob = async (req: AuthRequest, res: Response): Promise<void>
             jobId: data.jobId,
             applicantId: req.user!.id,
             cvUrl: data.cvUrl || "mock_cv_url.pdf",
+            experience: data.experience,
+            education: data.education,
+            portfolio: data.portfolio,
+            skills: data.skills
         });
         console.log('✅ Application created successfully:', application._id);
 
@@ -210,12 +214,17 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     cvSkills = [];
                 }
                 
-                // Combine profile skills with CV skills
+                // Combine profile skills with CV skills and form skills
                 let allSkills: string[] = [];
-                if (applicant.skills && applicant.skills.length > 0) {
+                if (app.skills) {
+                    const formSkills = app.skills.split(',').map(s => s.trim()).filter(Boolean);
+                    allSkills = [...formSkills];
+                    console.log(`📋 Form submitted skills: ${app.skills}`);
+                } else if (applicant.skills && applicant.skills.length > 0) {
                     allSkills = [...applicant.skills];
-                    console.log(`� Profile skills: ${applicant.skills.join(", ")}`);
+                    console.log(`👤 Profile skills: ${applicant.skills.join(", ")}`);
                 }
+                
                 if (cvSkills.length > 0) {
                     allSkills = [...allSkills, ...cvSkills];
                     console.log(`📄 CV extracted skills: ${cvSkills.join(", ")}`);
@@ -230,20 +239,26 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     app.aiSummary = "The candidate profile does not list any skills, making it impossible to determine if they meet the requirements.";
                 } else {
                     // Build comprehensive analysis prompt
-                    const educationText = cvData?.education?.map(edu => 
-                        `${edu.degree} from ${edu.institution} (${edu.year})${edu.gpa ? ` - GPA: ${edu.gpa}` : ''}`
-                    ).join('\n') || 'No education details found';
+                    const educationText = app.education 
+                        ? `(From Form): ${app.education}\n` 
+                        : (cvData?.education?.map(edu => 
+                            `${edu.degree} from ${edu.institution} (${edu.year})${edu.gpa ? ` - GPA: ${edu.gpa}` : ''}`
+                          ).join('\n') || 'No education details found');
                     
-                    const experienceText = cvData?.experience?.map(exp => 
-                        `${exp.title} at ${exp.company}${exp.duration ? ` (${exp.duration})` : ''}${exp.description ? `\nDescription: ${exp.description}` : ''}`
-                    ).join('\n\n') || 'No experience details found';
+                    const experienceText = app.experience 
+                        ? `(From Form): ${app.experience}\n` 
+                        : (cvData?.experience?.map(exp => 
+                            `${exp.title} at ${exp.company}${exp.duration ? ` (${exp.duration})` : ''}${exp.description ? `\nDescription: ${exp.description}` : ''}`
+                          ).join('\n\n') || 'No experience details found');
                     
                     const languagesText = cvData?.languages?.join(', ') || 'No languages specified';
                     const rawCvText = cvData?.rawText || 'No raw text available';
                     
+                    const portfolioUrl = app.portfolio || applicant.githubUrl || cvData?.github || "Not provided";
+                    
                     const prompt = `
                     You are an expert AI technical recruiter conducting a comprehensive candidate evaluation. 
-                    Analyze BOTH the candidate's profile information AND their detailed CV content.
+                    Analyze BOTH the candidate's application form information AND their detailed CV content.
                     
                     === JOB REQUIREMENTS ===
                     Position: ${job.title}
@@ -254,10 +269,10 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     
                     === CANDIDATE PROFILE ===
                     Name: ${applicant.fullName}
-                    Profile Skills: ${applicant.skills?.join(", ") || "None listed"}
-                    GitHub (from profile): ${applicant.githubUrl || "Not provided"}
+                    Skills (Combined from form/profile/CV): ${uniqueSkills.join(", ") || "None listed"}
+                    Portfolio/GitHub: ${portfolioUrl}
                     Preferred Roles: ${(applicant as any).interestedRoles?.join(", ") || "Not specified"}
-                    Preferred Locations: ${(applicant as any).preferredLocations?.join(", ") || "Not specified"}
+                    Preferred Locations: ${(applicant as any).preferredLocations?.join(", ") || "Not specified"}ferred Locations: ${(applicant as any).preferredLocations?.join(", ") || "Not specified"}
                     
                     === CV ANALYSIS ===
                     ${cvData ? `
@@ -364,7 +379,7 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     const contradictions = aiData.contradictions && aiData.contradictions.length > 0 
                         ? aiData.contradictions.map((c: string) => `• ${c}`).join('\n') 
                         : null;
-                    const github = applicant.githubUrl || aiData.github || cvData?.github || 'Not provided';
+                    const github = portfolioUrl;
                     
                     // Build organized summary with clean formatting
                     let organizedSummary = `ASSESSMENT\n${summary}`;

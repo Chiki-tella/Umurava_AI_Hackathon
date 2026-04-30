@@ -9,6 +9,7 @@ import { Job } from '@/lib/jobs-backend'
 import { clsx } from 'clsx'
 import { useAuthContextNew } from '@/components/AuthProviderNew'
 import { applyToJob } from '@/lib/applications-backend'
+import { uploadAPI } from '@/lib/api'
 
 interface ApplicationFormClientProps {
   job: Job
@@ -103,7 +104,29 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
     try {
       const jobId = (job._id || job.id) as string;
       console.log('🚀 Submitting application for job:', jobId)
-      console.log('📝 Application data:', { jobId, cvUrl: resumeFileName || undefined })
+      
+      let finalCvUrl: string | undefined = undefined;
+
+      // Upload CV if provided
+      if (resumeFile) {
+        const uploadData = new FormData();
+        uploadData.append('cv', resumeFile);
+        try {
+          console.log('📤 Uploading CV...');
+          const uploadRes = await uploadAPI.uploadCV(uploadData);
+          if (uploadRes.data.success && uploadRes.data.cvUrl) {
+            finalCvUrl = uploadRes.data.cvUrl;
+            console.log('✅ CV uploaded successfully:', finalCvUrl);
+          }
+        } catch (uploadErr) {
+          console.error('❌ Failed to upload CV:', uploadErr);
+          alert('Failed to upload CV. Please try again.');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      console.log('📝 Application data:', { jobId, cvUrl: finalCvUrl || undefined })
       
       // Check if user is authenticated
       const token = localStorage.getItem('talentai_token');
@@ -111,7 +134,11 @@ export function ApplicationFormClient({ job }: ApplicationFormClientProps) {
       
       const result = await applyToJob({
         jobId: jobId,
-        cvUrl: resumeFileName || undefined
+        cvUrl: finalCvUrl,
+        experience: formData.experience,
+        education: formData.education,
+        portfolio: formData.portfolio,
+        skills: formData.skills
       })
       
       console.log('📊 Application result:', result)

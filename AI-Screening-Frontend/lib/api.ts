@@ -123,9 +123,26 @@ export const jobAPI = {
   getRecommendedJobs: () => apiClient.get<ApiResponse<{ jobs: any[]; count: number }>>('/jobs/recommended'),
 }
 
+// Upload APIs
+export const uploadAPI = {
+  uploadCV: (formData: FormData) => 
+    apiClient.post<ApiResponse<{ cvUrl: string, file: any }>>('/uploads/cv', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+}
+
 // Application APIs
 export const applicationAPI = {
-  applyToJob: (data: { jobId: string; cvUrl?: string }) =>
+  applyToJob: (data: { 
+    jobId: string; 
+    cvUrl?: string;
+    experience?: string;
+    education?: string;
+    portfolio?: string;
+    skills?: string;
+  }) =>
     apiClient.post<ApiResponse<{ application: any }>>('/applications', data),
 
   getMyApplications: () =>

@@ -25,6 +25,10 @@ export interface Application {
 export async function applyToJob(data: {
   jobId: string
   cvUrl?: string
+  experience?: string
+  education?: string
+  portfolio?: string
+  skills?: string
 }): Promise<{ application: Application } | { error: string }> {
   try {
     const response = await applicationAPI.applyToJob(data)
