@@ -174,34 +174,36 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     try {
                         console.log('📄 Reading CV file:', app.cvUrl);
                         
-                        // Try to read the actual CV file
+                        // Try multiple paths to find the CV file
                         let cvBuffer: Buffer | undefined;
                         try {
-                            // Construct full file path
-                            // Robust path handling for Windows: remove leading slash if joining with CWD
                             const normalizedCvUrl = app.cvUrl.startsWith('/') ? app.cvUrl.substring(1) : app.cvUrl;
-                            const fullPath = path.resolve(process.cwd(), normalizedCvUrl);
-                            console.log('🔍 Looking for CV at primary path:', fullPath);
                             
-                            if (fs.existsSync(fullPath)) {
-                                cvBuffer = fs.readFileSync(fullPath);
-                                console.log('✅ CV file read successfully from:', fullPath);
-                            } else {
-                                console.log('⚠️ CV file not found at primary path:', fullPath);
-                                // Fallback: try relative to the root if backend is in a subfolder
-                                const fallbackPath = path.resolve(process.cwd(), '..', normalizedCvUrl);
-                                console.log('🔍 Trying fallback path:', fallbackPath);
-                                if (fs.existsSync(fallbackPath)) {
-                                    cvBuffer = fs.readFileSync(fallbackPath);
-                                    console.log('✅ CV file read successfully from fallback:', fallbackPath);
-                                } else {
-                                    console.log('❌ CV file not found at any path');
-                                    cvData = null;
-                                    cvSkills = [];
+                            // Potential paths to check
+                            const pathsToCheck = [
+                                path.resolve(process.cwd(), normalizedCvUrl),
+                                path.resolve(process.cwd(), 'backend', normalizedCvUrl),
+                                path.resolve(process.cwd(), '..', normalizedCvUrl),
+                                path.join(__dirname, '..', '..', normalizedCvUrl)
+                            ];
+
+                            console.log('🔍 Searching for CV file for:', applicant?.fullName);
+                            console.log('📍 Database CV URL:', app.cvUrl);
+
+                            for (const checkPath of pathsToCheck) {
+                                console.log('🔎 Checking path:', checkPath);
+                                if (fs.existsSync(checkPath)) {
+                                    cvBuffer = fs.readFileSync(checkPath);
+                                    console.log('✅ CV file found at:', checkPath);
+                                    break;
                                 }
                             }
+
+                            if (!cvBuffer) {
+                                console.log('❌ CV file not found at any searched path');
+                            }
                         } catch (fileError: any) {
-                            console.log('⚠️ Error reading CV file:', fileError.message);
+                            console.log('⚠️ Error during CV file search:', fileError.message);
                             cvData = null;
                             cvSkills = [];
                         }
