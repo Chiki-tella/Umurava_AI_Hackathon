@@ -166,7 +166,7 @@ export function NotificationsPage() {
                   }
                 }
 
-                const style = getNotificationStyle(notification.type)
+                const style = getNotificationStyle(notification.type || 'info')
 
                 return (
                   <motion.div

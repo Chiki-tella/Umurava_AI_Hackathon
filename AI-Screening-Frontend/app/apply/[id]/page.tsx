@@ -27,6 +27,7 @@ interface ApplicationData {
   email: string
   phone: string
   education: string
+  experience: string
   portfolio: string
   skills: string
   coverLetter: string
@@ -46,6 +47,7 @@ export default function ApplyPage() {
     phone: '',
     education: '',
     experience: '',
+    portfolio: '',
     skills: '',
     coverLetter: '',
     resume: null
@@ -156,7 +158,7 @@ export default function ApplyPage() {
         experience: formData.experience,
         skills: formData.skills,
         coverLetter: formData.coverLetter,
-        portfolio: '' // Add if you have a field for it
+        portfolio: formData.portfolio
       })
 
       if ('application' in result) {
@@ -341,6 +343,22 @@ export default function ApplyPage() {
                       value={formData.skills}
                       onChange={handleInputChange}
                       placeholder="React, TypeScript, Figma, etc. (comma separated)"
+                      className="w-full px-4 py-2 bg-dark-800 border border-white/10 rounded-lg text-white focus:border-brand-purple focus:outline-none transition-colors"
+                    />
+                  </div>
+
+                  {/* Portfolio */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-brand-violet" />
+                      Portfolio URL
+                    </h2>
+                    <input
+                      type="url"
+                      name="portfolio"
+                      value={formData.portfolio}
+                      onChange={handleInputChange}
+                      placeholder="e.g., behance.net/username or portfolio.com"
                       className="w-full px-4 py-2 bg-dark-800 border border-white/10 rounded-lg text-white focus:border-brand-purple focus:outline-none transition-colors"
                     />
                   </div>

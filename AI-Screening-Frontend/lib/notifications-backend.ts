@@ -4,7 +4,7 @@ export interface Notification {
   _id: string
   userId: string
   message: string
-  type: 'selected' | 'accepted' | 'rejected' | 'info'
+  type?: 'selected' | 'accepted' | 'rejected' | 'info'
   read: boolean
   createdAt: string
   jobTitle?: string
