@@ -272,7 +272,7 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     const languagesText = cvData?.languages?.join(', ') || 'No languages specified';
                     const rawCvText = cvData?.rawText || 'No raw text available';
                     
-                    const portfolioUrl = app.portfolio || applicant.githubUrl || cvData?.github || "Not provided";
+                    const portfolioUrl = app.portfolio || cvData?.portfolio || applicant.githubUrl || cvData?.github || "Not provided";
                     const candidateName = (app.firstName || app.lastName) ? `${app.firstName || ''} ${app.lastName || ''}`.trim() : applicant.fullName;
                     
                     const prompt = `
@@ -335,9 +335,11 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                       "concerns": ["<list of any concerns or gaps>"],
                       "missingSkills": ["<specific required skills the applicant is missing>"],
                       "gaps": ["<detailed description of what the applicant is lacking and what they need to improve>"],
-                      "github": "<candidate's GitHub URL if found in profile or CV text, otherwise 'Not provided'>",
+                      "github": "<candidate's GitHub or Portfolio URL if found in profile or CV text, otherwise 'Not provided'>",
                       "contradictions": ["<any contradictions between profile and CV>"]
                     }
+
+                    IMPORTANT: If a portfolio link or education details are present in the 'FULL CV TEXT' but missing from the structured sections, DO NOT list them as 'missing' or 'concerns'. Use the 'FULL CV TEXT' as the ultimate source of truth.
                     `;
 
                 try {

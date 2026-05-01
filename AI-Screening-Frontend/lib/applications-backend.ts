@@ -29,6 +29,11 @@ export async function applyToJob(data: {
   education?: string
   portfolio?: string
   skills?: string
+  coverLetter?: string
+  firstName?: string
+  lastName?: string
+  email?: string
+  phone?: string
 }): Promise<{ application: Application } | { error: string }> {
   try {
     const response = await applicationAPI.applyToJob(data)

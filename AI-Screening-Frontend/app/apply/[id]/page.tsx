@@ -17,7 +17,8 @@ import {
   Mail,
   Phone,
   GraduationCap,
-  Award
+  Award,
+  Sparkles
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -26,7 +27,8 @@ interface ApplicationData {
   email: string
   phone: string
   education: string
-  experience: string
+  portfolio: string
+  skills: string
   coverLetter: string
   resume: File | null
 }
@@ -44,6 +46,7 @@ export default function ApplyPage() {
     phone: '',
     education: '',
     experience: '',
+    skills: '',
     coverLetter: '',
     resume: null
   })
@@ -113,47 +116,57 @@ export default function ApplyPage() {
     setSubmitting(true)
 
     try {
-      // Create form data for file upload
-      const formDataToSend = new FormData()
-      formDataToSend.append('jobId', job._id)
-      formDataToSend.append('fullName', formData.fullName)
-      formDataToSend.append('email', formData.email)
-      formDataToSend.append('phone', formData.phone)
-      formDataToSend.append('education', formData.education)
-      formDataToSend.append('experience', formData.experience)
-      formDataToSend.append('coverLetter', formData.coverLetter)
-      
+      let finalCvUrl = ''
+
+      // 1. Upload CV if present
       if (formData.resume) {
-        formDataToSend.append('resume', formData.resume)
+        const uploadData = new FormData()
+        uploadData.append('cv', formData.resume)
+        
+        try {
+          const { uploadAPI } = await import('@/lib/api')
+          const uploadRes = await uploadAPI.uploadCV(uploadData)
+          if (uploadRes.data.success && uploadRes.data.cvUrl) {
+            finalCvUrl = uploadRes.data.cvUrl
+            console.log('✅ CV uploaded successfully:', finalCvUrl)
+          }
+        } catch (uploadErr) {
+          console.error('❌ Failed to upload CV:', uploadErr)
+          alert('Failed to upload CV. Please try again.')
+          setSubmitting(false)
+          return
+        }
       }
 
-      // Make API call to submit application
-      console.log('🚀 Submitting application:', {
+      // 2. Prepare name parts
+      const nameParts = formData.fullName.trim().split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+
+      // 3. Submit application with ALL data
+      const { applyToJob } = await import('@/lib/applications-backend')
+      const result = await applyToJob({
         jobId: job._id,
-        ...formData,
-        resumeFile: formData.resume?.name
+        cvUrl: finalCvUrl,
+        firstName,
+        lastName,
+        email: formData.email,
+        phone: formData.phone,
+        education: formData.education,
+        experience: formData.experience,
+        skills: formData.skills,
+        coverLetter: formData.coverLetter,
+        portfolio: '' // Add if you have a field for it
       })
 
-      try {
-        const { applyToJob } = await import('@/lib/applications-backend')
-        const result = await applyToJob({
-          jobId: job._id,
-          cvUrl: formData.resume?.name
-        })
-
-        if ('application' in result) {
-          console.log('✅ Application submitted successfully!')
-          alert('Application submitted successfully!')
-          router.push('/jobs')
-        } else if ('error' in result) {
-          console.error('❌ Application failed:', result.error)
-          alert(`Application failed: ${result.error}`)
-        }
-      } catch (error: any) {
-        console.error('❌ Application error:', error)
-        alert(`Application failed: ${error.message || 'Unknown error'}`)
+      if ('application' in result) {
+        console.log('✅ Application submitted successfully!')
+        alert('Application submitted successfully!')
+        router.push('/jobs')
+      } else if ('error' in result) {
+        console.error('❌ Application failed:', result.error)
+        alert(`Application failed: ${result.error}`)
       }
-      
     } catch (error) {
       console.error('Failed to submit application:', error)
       alert('Failed to submit application. Please try again.')
@@ -313,6 +326,22 @@ export default function ApplyPage() {
                       rows={3}
                       placeholder="Tell us about your educational background..."
                       className="w-full px-4 py-2 bg-dark-800 border border-white/10 rounded-lg text-white focus:border-brand-purple focus:outline-none transition-colors resize-none"
+                    />
+                  </div>
+
+                  {/* Skills */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-brand-violet" />
+                      Skills
+                    </h2>
+                    <input
+                      type="text"
+                      name="skills"
+                      value={formData.skills}
+                      onChange={handleInputChange}
+                      placeholder="React, TypeScript, Figma, etc. (comma separated)"
+                      className="w-full px-4 py-2 bg-dark-800 border border-white/10 rounded-lg text-white focus:border-brand-purple focus:outline-none transition-colors"
                     />
                   </div>
 

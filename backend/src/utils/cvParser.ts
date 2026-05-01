@@ -216,9 +216,29 @@ function extractLinkedIn(text: string): string | undefined {
 }
 
 function extractPortfolio(text: string): string | undefined {
-  const urlRegex = /https?:\/\/(?!github|linkedin)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/g;
+  // Catch URLs with http/https
+  const urlRegex = /https?:\/\/(?!github|linkedin)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/gi;
   const matches = text.match(urlRegex);
-  return matches ? matches[0] : undefined;
+  
+  if (matches) return matches[0];
+
+  // Fallback: Catch common portfolio domains even without protocol
+  const commonPortfolioDomains = [
+    /(?:www\.)?behance\.net\/[a-zA-Z0-9._-]+/gi,
+    /(?:www\.)?dribbble\.com\/[a-zA-Z0-9._-]+/gi,
+    /(?:www\.)?adobeportfolio\.com\/[a-zA-Z0-9._-]+/gi,
+    /(?:www\.)?carbonmade\.com\/[a-zA-Z0-9._-]+/gi,
+    /(?:www\.)?wixsite\.com\/[a-zA-Z0-9._-]+/gi
+  ];
+
+  for (const domainRegex of commonPortfolioDomains) {
+    const domainMatch = text.match(domainRegex);
+    if (domainMatch) {
+      return `https://${domainMatch[0]}`;
+    }
+  }
+
+  return undefined;
 }
 
 function extractLanguages(text: string): string[] {
@@ -242,9 +262,12 @@ function extractEducation(text: string): EducationEntry[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].toLowerCase();
     
-    // Education keywords
+    // Education keywords including abbreviations
     if (line.includes('bachelor') || line.includes('master') || line.includes('phd') || 
-        line.includes('degree') || line.includes('university') || line.includes('college')) {
+        line.includes('degree') || line.includes('university') || line.includes('college') ||
+        line.includes('b.sc') || line.includes('m.sc') || line.includes('b.a') || 
+        line.includes('m.a') || line.includes('hnd') || line.includes('diploma') ||
+        line.includes('certification') || line.includes('certificate')) {
       
       const degree = lines[i].trim();
       let institution = '';
