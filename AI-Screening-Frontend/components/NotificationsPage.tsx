@@ -127,31 +127,10 @@ export function NotificationsPage() {
               </div>
             ) : (
               notifications.map((notification, index) => {
-                const getNotificationStyle = (type: 'selected' | 'accepted' | 'rejected') => {
+                const getNotificationStyle = (type: 'selected' | 'accepted' | 'rejected' | 'info') => {
                   switch (type) {
                     case 'accepted':
-                      return {
-                        border: 'border-green-500/20',
-                        bg: 'bg-green-500/5',
-                        iconBg: 'bg-green-500/10',
-                        iconBorder: 'border-green-500/30',
-                        iconColor: 'text-green-400',
-                        badge: 'badge-success',
-                        title: 'Congratulations! You have been accepted!',
-                        badgeText: 'Accepted'
-                      }
-                    case 'rejected':
-                      return {
-                        border: 'border-red-500/20',
-                        bg: 'bg-red-500/5',
-                        iconBg: 'bg-red-500/10',
-                        iconBorder: 'border-red-500/30',
-                        iconColor: 'text-red-400',
-                        badge: 'badge-danger',
-                        title: 'Oops! Sorry, not selected this time',
-                        badgeText: 'Rejected'
-                      }
-                    default: // selected
+                    case 'selected':
                       return {
                         border: 'border-green-500/20',
                         bg: 'bg-green-500/5',
@@ -161,6 +140,28 @@ export function NotificationsPage() {
                         badge: 'badge-success',
                         title: 'Congratulations! Your application has been selected!',
                         badgeText: 'Selected'
+                      }
+                    case 'rejected':
+                      return {
+                        border: 'border-red-500/20',
+                        bg: 'bg-red-500/5',
+                        iconBg: 'bg-red-500/10',
+                        iconBorder: 'border-red-500/30',
+                        iconColor: 'text-red-400',
+                        badge: 'badge-danger',
+                        title: 'Application Status Update',
+                        badgeText: 'Rejected'
+                      }
+                    default: // info or other
+                      return {
+                        border: 'border-blue-500/20',
+                        bg: 'bg-blue-500/5',
+                        iconBg: 'bg-blue-500/10',
+                        iconBorder: 'border-blue-500/30',
+                        iconColor: 'text-blue-400',
+                        badge: 'badge-info',
+                        title: 'Notification',
+                        badgeText: 'Update'
                       }
                   }
                 }
@@ -191,7 +192,7 @@ export function NotificationsPage() {
                             <h3 className="text-lg font-semibold text-white mb-1">
                               {style.title}
                             </h3>
-                            <p className="text-gray-300 mb-3">
+                            <p className="text-gray-300 mb-3 whitespace-pre-line">
                               {notification.message}
                             </p>
                           </div>

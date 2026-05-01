@@ -503,9 +503,37 @@ export const selectCandidate = async (req: AuthRequest, res: Response): Promise<
         application.status = data.status;
         await application.save();
 
+        // Prepare tailored notification message based on status and AI feedback
+        let notificationMessage = `Your application status for job "${job.title}" has been updated to ${data.status}.`;
+        let notificationType: "selected" | "accepted" | "rejected" | "info" = "info";
+
+        if (data.status === "selected") {
+            notificationType = "selected";
+            if (application.aiSummary) {
+                // Try to extract strengths for selected candidates
+                const strengthsMatch = application.aiSummary.match(/STRENGTHS\n([\s\S]*?)(?:\n\n|$)/);
+                if (strengthsMatch && strengthsMatch[1]) {
+                    notificationMessage += `\n\nKey Strengths identified by our AI:\n${strengthsMatch[1].trim()}`;
+                }
+            }
+        } else if (data.status === "rejected") {
+            notificationType = "rejected";
+            if (application.aiSummary) {
+                // Try to extract development areas for rejected candidates
+                const developmentMatch = application.aiSummary.match(/DEVELOPMENT AREAS\n([\s\S]*?)(?:\n\n|$)/);
+                const concernsMatch = application.aiSummary.match(/CONCERNS\n([\s\S]*?)(?:\n\n|$)/);
+                
+                const feedback = developmentMatch?.[1] || concernsMatch?.[1];
+                if (feedback) {
+                    notificationMessage += `\n\nFeedback for your growth:\n${feedback.trim()}`;
+                }
+            }
+        }
+
         await Notification.create({
             userId: application.applicantId,
-            message: `Your application status for job "${job.title}" has been updated to ${data.status}.`,
+            message: notificationMessage,
+            type: notificationType
         });
 
         res.status(200).json({ success: true, application });

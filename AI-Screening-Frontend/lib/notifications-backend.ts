@@ -4,8 +4,13 @@ export interface Notification {
   _id: string
   userId: string
   message: string
+  type: 'selected' | 'accepted' | 'rejected' | 'info'
   read: boolean
   createdAt: string
+  jobTitle?: string
+  company?: string
+  jobId?: string
+  notifiedAt?: string
 }
 
 export async function getNotifications(): Promise<{ notifications: Notification[] } | { error: string }> {
