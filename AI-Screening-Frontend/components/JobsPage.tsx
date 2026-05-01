@@ -148,7 +148,7 @@ export function JobsPage() {
         {/* All / remaining open jobs */}
         <section>
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 rounded-xl bg-dark-700/50 border border-white/10">
+            <div className="p-2 rounded-xl bg-dark-900/50 border border-white/10">
               <Briefcase className="w-5 h-5 text-gray-400" />
             </div>
             <div>

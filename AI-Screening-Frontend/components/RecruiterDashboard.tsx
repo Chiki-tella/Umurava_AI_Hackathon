@@ -115,7 +115,7 @@ function ApplicationCard({
                 <span className="text-xs text-gray-500">AI Match Score</span>
                 <span className={clsx('text-2xl font-bold', score.color)}>{app.score || 0}%</span>
               </div>
-              <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
+              <div className="h-2 bg-dark-900 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${app.score || 0}%` }}
@@ -262,8 +262,8 @@ function ApplicationCard({
                       <RadarChart data={radarData}>
                         <PolarGrid stroke="rgba(255,255,255,0.1)" />
                         <PolarAngleAxis dataKey="subject" tick={{ fill: '#9CA3AF', fontSize: 11 }} />
-                        <Radar name="Score" dataKey="value" stroke="#7C3AED" fill="#7C3AED" fillOpacity={0.2} strokeWidth={2} />
-                        <Tooltip contentStyle={{ background: '#141428', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }} formatter={(v: number) => [`${v}%`, 'Score']} />
+                        <Radar name="Score" dataKey="value" stroke="var(--accent-primary)" fill="var(--accent-primary)" fillOpacity={0.2} strokeWidth={2} />
+                        <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(56, 189, 248, 0.1)', borderRadius: '12px', color: '#fff' }} formatter={(v: number) => [`${v}%`, 'Score']} />
                       </RadarChart>
                     </ResponsiveContainer>
                   </div>
@@ -498,7 +498,7 @@ export function RecruiterDashboard() {
                 </select>
               </div>
               <div className="flex items-center gap-3">
-                <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-dark-700/50 border border-white/5 text-sm text-gray-400">
+                <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-dark-900/50 border border-white/5 text-sm text-gray-400">
                   <Users className="w-4 h-4" />
                   {applications.length} applicant{applications.length !== 1 ? 's' : ''}
                 </div>
@@ -536,7 +536,7 @@ export function RecruiterDashboard() {
                     <span className="text-gray-400">Progress</span>
                     <span className="text-brand-violet font-medium">{Math.round(screeningProgress)}%</span>
                   </div>
-                  <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
+                  <div className="h-2 bg-dark-900 rounded-full overflow-hidden">
                     <motion.div className="h-full bg-gradient-to-r from-brand-purple to-brand-pink rounded-full" style={{ width: `${screeningProgress}%` }} />
                   </div>
                   <div className="mt-4 space-y-2">

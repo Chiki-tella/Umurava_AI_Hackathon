@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Space_Grotesk } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/Navbar'
 import { ThemeProvider } from '@/components/ThemeProvider'
@@ -11,7 +11,7 @@ import { RouteWatcher } from '@/components/RouteWatcher'
 import { PageTitle } from '@/components/PageTitle'
 // import { Notifications } from '@/components/Notifications'
 
-const inter = Inter({ subsets: ['latin'] })
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'TalentAI - Smart Hiring Assistant',
@@ -25,18 +25,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={spaceGrotesk.className}>
         <ReduxProvider>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
             <NoSSR fallback={<div className="min-h-screen bg-dark-900 flex items-center justify-center">
               <div className="w-10 h-10 border-2 border-brand-purple/30 border-t-brand-purple rounded-full animate-spin" />
             </div>}>
               <AuthProviderNew>
                   <RouteWatcher />
                   <PageTitle />
-                  <div className="min-h-screen bg-dark-900 text-white">
+                  <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
                     <div className="fixed inset-0 bg-hero-glow pointer-events-none" />
-                    <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-purple/10 via-transparent to-transparent pointer-events-none" />
+                    <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-purple/15 via-transparent to-transparent pointer-events-none" />
                     <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-brand-pink/10 via-transparent to-transparent pointer-events-none" />
                     
                     <div className="relative z-10">

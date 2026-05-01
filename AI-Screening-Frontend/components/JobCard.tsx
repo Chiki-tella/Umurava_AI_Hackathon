@@ -112,7 +112,7 @@ export function JobCard({ job, index, highlighted }: JobCardProps) {
                 </div>
               )}
               <div className="flex items-center text-gray-400 text-sm">
-                <span className="px-2 py-1 bg-dark-700/50 border border-white/10 rounded-lg text-xs text-gray-300 capitalize">
+                <span className="px-2 py-1 bg-dark-900/50 border border-white/10 rounded-lg text-xs text-gray-300 capitalize">
                   {job.employmentType}
                 </span>
               </div>

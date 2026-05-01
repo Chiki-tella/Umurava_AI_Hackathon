@@ -178,19 +178,30 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                         let cvBuffer: Buffer | undefined;
                         try {
                             // Construct full file path
-                            const fullPath = path.join(process.cwd(), app.cvUrl);
-                            console.log('🔍 Looking for CV at:', fullPath);
+                            // Robust path handling for Windows: remove leading slash if joining with CWD
+                            const normalizedCvUrl = app.cvUrl.startsWith('/') ? app.cvUrl.substring(1) : app.cvUrl;
+                            const fullPath = path.resolve(process.cwd(), normalizedCvUrl);
+                            console.log('🔍 Looking for CV at primary path:', fullPath);
                             
                             if (fs.existsSync(fullPath)) {
                                 cvBuffer = fs.readFileSync(fullPath);
                                 console.log('✅ CV file read successfully from:', fullPath);
                             } else {
-                                console.log('⚠️ CV file not found at:', fullPath);
-                                cvData = null;
-                                cvSkills = [];
+                                console.log('⚠️ CV file not found at primary path:', fullPath);
+                                // Fallback: try relative to the root if backend is in a subfolder
+                                const fallbackPath = path.resolve(process.cwd(), '..', normalizedCvUrl);
+                                console.log('🔍 Trying fallback path:', fallbackPath);
+                                if (fs.existsSync(fallbackPath)) {
+                                    cvBuffer = fs.readFileSync(fallbackPath);
+                                    console.log('✅ CV file read successfully from fallback:', fallbackPath);
+                                } else {
+                                    console.log('❌ CV file not found at any path');
+                                    cvData = null;
+                                    cvSkills = [];
+                                }
                             }
-                        } catch (fileError) {
-                            console.log('⚠️ Could not read CV file:', fileError);
+                        } catch (fileError: any) {
+                            console.log('⚠️ Error reading CV file:', fileError.message);
                             cvData = null;
                             cvSkills = [];
                         }
@@ -283,7 +294,7 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
                     Portfolio/GitHub: ${portfolioUrl}
                     Preferred Roles: ${(applicant as any).interestedRoles?.join(", ") || "Not specified"}
                     Preferred Locations: ${(applicant as any).preferredLocations?.join(", ") || "Not specified"}
-                    ${coverLetterText}ferred Locations: ${(applicant as any).preferredLocations?.join(", ") || "Not specified"}
+                    ${coverLetterText}
                     
                     === CV ANALYSIS ===
                     ${cvData ? `

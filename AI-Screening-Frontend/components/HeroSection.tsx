@@ -18,9 +18,9 @@ export function HeroSection({ jobCount }: HeroSectionProps) {
 
       {/* Dot grid */}
       <div
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0 opacity-10"
         style={{
-          backgroundImage: 'radial-gradient(circle, rgba(124,58,237,0.4) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, var(--accent-primary) 1px, transparent 1px)',
           backgroundSize: '40px 40px',
         }}
       />
@@ -89,7 +89,7 @@ export function HeroSection({ jobCount }: HeroSectionProps) {
           ].map(({ icon: Icon, label, color }) => (
             <div
               key={label}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-dark-800/50 border border-white/5 text-sm text-gray-300"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-dark-900/50 border border-white/5 text-sm text-gray-300"
             >
               <Icon className={`w-4 h-4 ${color}`} />
               {label}

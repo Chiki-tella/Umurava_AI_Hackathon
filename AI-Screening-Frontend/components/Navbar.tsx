@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Briefcase, LayoutDashboard, Zap, LogOut, User, ChevronDown, ShieldCheck, Bell } from 'lucide-react'
+import { Briefcase, LayoutDashboard, LogOut, User, ChevronDown, ShieldCheck, Bell } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAuthContextNew } from '@/components/AuthProviderNew'
 import { useState, useRef, useEffect } from 'react'
@@ -38,32 +38,31 @@ export function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/5 bg-dark-900/80 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="sticky top-0 z-50 border-b border-[var(--border)] bg-[rgba(7,12,20,0.92)] backdrop-blur-xl shadow-[0_1px_3px_var(--shadow)]">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href={homeHref} className="flex items-center gap-2.5 group">
-            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-brand-purple to-brand-pink flex items-center justify-center shadow-glow-purple group-hover:shadow-glow-pink transition-all duration-300">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold tracking-tight">
-              Talent<span className="gradient-text">AI</span>
+          <Link href={homeHref} className="group inline-flex items-center">
+            <span className="text-xl sm:text-2xl font-bold uppercase font-display tracking-[0.25em] text-[var(--text-primary)]">
+              Talent
+            </span>
+            <span className="text-xl sm:text-2xl font-bold uppercase font-display tracking-[0.05em] text-[var(--accent-primary)]">
+              AI
             </span>
           </Link>
 
           {/* Center nav — only show relevant links */}
           {user && (
-            <div className="hidden md:flex items-center gap-1 bg-dark-800/50 backdrop-blur-sm border border-white/5 rounded-2xl p-1">
+            <div className="hidden md:flex items-center gap-1 bg-[rgba(17,29,45,0.7)] backdrop-blur-sm border border-[var(--border)] rounded-lg p-1">
               {/* Job seekers see Jobs */}
               {user.role === 'jobseeker' && (
                 <>
                   <Link
                     href="/jobs"
                     className={clsx(
-                      'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
+                      'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200',
                       isActive('/jobs')
-                        ? 'bg-brand-purple/20 text-brand-violet border border-brand-purple/30'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        ? 'bg-[rgba(74,158,191,0.16)] text-[var(--accent-light)] border border-[rgba(74,158,191,0.42)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)]'
                     )}
                   >
                     <Briefcase className="w-4 h-4" />
@@ -72,10 +71,10 @@ export function Navbar() {
                   <Link
                     href="/notifications"
                     className={clsx(
-                      'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
+                      'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200',
                       isActive('/notifications')
-                        ? 'bg-brand-purple/20 text-brand-violet border border-brand-purple/30'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        ? 'bg-[rgba(74,158,191,0.16)] text-[var(--accent-light)] border border-[rgba(74,158,191,0.42)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)]'
                     )}
                   >
                     <div className="relative">
@@ -92,10 +91,10 @@ export function Navbar() {
                 <Link
                   href="/dashboard"
                   className={clsx(
-                    'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
+                      'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200',
                     isActive('/dashboard')
-                      ? 'bg-brand-purple/20 text-brand-violet border border-brand-purple/30'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-[rgba(74,158,191,0.16)] text-[var(--accent-light)] border border-[rgba(74,158,191,0.42)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)]'
                   )}
                 >
                   <LayoutDashboard className="w-4 h-4" />
@@ -108,10 +107,10 @@ export function Navbar() {
                 <Link
                   href="/admin"
                   className={clsx(
-                    'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
+                      'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200',
                     isActive('/admin')
-                      ? 'bg-brand-orange/20 text-brand-orange border border-brand-orange/30'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-[rgba(74,158,191,0.16)] text-[var(--accent-light)] border border-[rgba(74,158,191,0.42)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)]'
                   )}
                 >
                   <ShieldCheck className="w-4 h-4" />
@@ -123,8 +122,8 @@ export function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[rgba(74,158,191,0.12)] border border-[rgba(74,158,191,0.35)] text-[var(--accent-light)] text-xs font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse" />
               AI Online
             </div>
 
@@ -132,28 +131,28 @@ export function Navbar() {
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setMenuOpen((o) => !o)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-dark-800/50 border border-white/10 hover:border-white/20 transition-all"
+                  className="flex items-center gap-2 px-3 py-2 rounded-md bg-[rgba(17,29,45,0.75)] border border-[var(--border)] hover:border-[rgba(74,158,191,0.45)] transition-all"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-purple to-brand-pink flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-7 h-7 rounded-md bg-[rgba(74,158,191,0.16)] border border-[rgba(74,158,191,0.4)] flex items-center justify-center text-[var(--accent-light)] text-xs font-bold">
                     {user?.fullName?.charAt(0)?.toUpperCase() || user?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
                   <div className="hidden sm:block text-left">
-                    <p className="text-sm font-medium text-white leading-none">{user?.fullName?.split(' ')[0] || user?.name?.split(' ')[0] || 'User'}</p>
-                    <p className="text-xs text-gray-500 capitalize">{user?.role || 'user'}</p>                  </div>
-                  <ChevronDown className={clsx('w-4 h-4 text-gray-400 transition-transform', menuOpen && 'rotate-180')} />
+                    <p className="text-sm font-medium text-[var(--text-primary)] leading-none">{user?.fullName?.split(' ')[0] || user?.name?.split(' ')[0] || 'User'}</p>
+                    <p className="text-xs text-[var(--text-muted)] capitalize">{user?.role || 'user'}</p>                  </div>
+                  <ChevronDown className={clsx('w-4 h-4 text-[var(--text-muted)] transition-transform', menuOpen && 'rotate-180')} />
                 </button>
 
                 {menuOpen && (
                   <div className="absolute right-0 top-full mt-2 w-52 glass-card py-2 shadow-card">
-                    <div className="px-4 py-2 border-b border-white/5 mb-1">
-                      <p className="text-sm font-medium text-white">{user?.fullName || user?.name || 'User'}</p>
-                      <p className="text-xs text-gray-500">{user?.email || 'user@example.com'}</p>
+                    <div className="px-4 py-2 border-b border-[var(--border)] mb-1">
+                      <p className="text-sm font-medium text-[var(--text-primary)]">{user?.fullName || user?.name || 'User'}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{user?.email || 'user@example.com'}</p>
                     </div>
                     {user?.role === 'jobseeker' && (
                       <Link
                         href="/notifications"
                         onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
                       >
                         <div className="relative">
                           <Bell className="w-4 h-4" />
@@ -165,7 +164,7 @@ export function Navbar() {
                     <Link
                       href="/profile"
                       onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
                     >
                       <User className="w-4 h-4" />
                       My Profile
