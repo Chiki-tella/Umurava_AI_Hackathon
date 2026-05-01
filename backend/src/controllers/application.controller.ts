@@ -160,10 +160,10 @@ export const screenApplicants = async (req: AuthRequest, res: Response): Promise
         for (let i = 0; i < applications.length; i++) {
             const app = applications[i];
             
-            // Add a small delay between requests (except the first one) to avoid rate limits
+            // Add a 5-second delay between requests (except the first one) to avoid strict rate limits
             if (i > 0) {
-                console.log(`⏳ Waiting 2 seconds before screening next candidate to avoid rate limits...`);
-                await sleep(2000);
+                console.log(`⏳ Waiting 5 seconds before screening next candidate to avoid rate limits...`);
+                await sleep(5000);
             }
             const applicant = await JobSeeker.findOne({ _id: app.applicantId });
             console.log(`🔍 Screening application for applicant: ${applicant?.fullName}`);
